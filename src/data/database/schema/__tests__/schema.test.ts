@@ -51,11 +51,11 @@ describe('Database Schema', () => {
     ])('has column: %s', col => expect(cols[col]).toBeDefined());
 
     it('marks nullable fields as optional', () => {
-      expect(cols['custom_relation'].isOptional).toBe(true);
-      expect(cols['place_id'].isOptional).toBe(true);
-      expect(cols['birthday'].isOptional).toBe(true);
-      expect(cols['phone'].isOptional).toBe(true);
-      expect(cols['notes'].isOptional).toBe(true);
+      expect(cols.custom_relation.isOptional).toBe(true);
+      expect(cols.place_id.isOptional).toBe(true);
+      expect(cols.birthday.isOptional).toBe(true);
+      expect(cols.phone.isOptional).toBe(true);
+      expect(cols.notes.isOptional).toBe(true);
     });
   });
 
@@ -109,7 +109,7 @@ describe('Database Schema', () => {
     ])('has column: %s', col => expect(cols[col]).toBeDefined());
 
     it('indexes session_id', () => {
-      expect(cols['session_id'].isIndexed).toBe(true);
+      expect(cols.session_id.isIndexed).toBe(true);
     });
   });
 
@@ -134,7 +134,7 @@ describe('Database Schema', () => {
     ])('has column: %s', col => expect(cols[col]).toBeDefined());
 
     it('indexes person_id', () => {
-      expect(cols['person_id'].isIndexed).toBe(true);
+      expect(cols.person_id.isIndexed).toBe(true);
     });
   });
 });
