@@ -1,4 +1,4 @@
-# Buddi — Technical Document
+# BuddyAi — Technical Document
 > *Your smart daily companion*
 
 > **Version:** 1.0  
@@ -28,11 +28,11 @@
 
 ## 1. Executive Summary
 
-This document describes the technical design of **Buddi**, a personal productivity mobile application built for a single user on Android. Buddi is designed to help the user manage their personal relationships, daily tasks, todos, and reminders through a conversational AI chatbot interface, supplemented by traditional UI screens.
+This document describes the technical design of **BuddyAi**, a personal productivity mobile application built for a single user on Android. BuddyAi is designed to help the user manage their personal relationships, daily tasks, todos, and reminders through a conversational AI chatbot interface, supplemented by traditional UI screens.
 
 The app runs entirely on-device with no dependency on external AI services. All data is encrypted locally using AES-256 and optionally synced to Firebase Firestore for backup. The AI chatbot is powered by Llama 3.2 3B, a lightweight open-source language model that runs fully on the device, ensuring privacy and offline capability.
 
-Key highlights of Buddi are as follows. The entire tech stack is free and open source. All AI inference is on-device with zero network calls. All data is encrypted at rest using AES-256. The chatbot supports multiple languages. Background tasks handle daily summaries, birthday reminders, and missed item re-notifications. The app targets Android 10 and above.
+Key highlights of BuddyAi are as follows. The entire tech stack is free and open source. All AI inference is on-device with zero network calls. All data is encrypted at rest using AES-256. The chatbot supports multiple languages. Background tasks handle daily summaries, birthday reminders, and missed item re-notifications. The app targets Android 10 and above.
 
 ---
 
@@ -40,7 +40,7 @@ Key highlights of Buddi are as follows. The entire tech stack is free and open s
 
 ### 2.1 People & Relationships
 
-Buddi allows the user to add people with the following attributes: name, relationship type (family, college, school, office, other, or custom), associated place (existing or newly created), priority level (high, medium, or low), birthday, phone number, and personal notes. Places can be of type college, school, office, or custom, and the user can create new places on the fly while adding a person.
+BuddyAi allows the user to add people with the following attributes: name, relationship type (family, college, school, office, other, or custom), associated place (existing or newly created), priority level (high, medium, or low), birthday, phone number, and personal notes. Places can be of type college, school, office, or custom, and the user can create new places on the fly while adding a person.
 
 ### 2.2 Tasks, Todos & Reminders
 
@@ -48,7 +48,7 @@ The app supports three distinct item types. A **Task** is a structured item with
 
 ### 2.3 Chatbot Interface
 
-The chatbot is the primary interface for all operations in Buddi. The user can type natural language messages to create, update, delete, or query people, tasks, todos, reminders, and settings. The chatbot is powered by Llama 3.2 3B running fully on-device. Chat history is stored in the local encrypted database and injected as context into every new AI prompt, allowing the chatbot to maintain conversational continuity. The chatbot supports multiple languages and always responds in the same language the user writes in.
+The chatbot is the primary interface for all operations in BuddyAi. The user can type natural language messages to create, update, delete, or query people, tasks, todos, reminders, and settings. The chatbot is powered by Llama 3.2 3B running fully on-device. Chat history is stored in the local encrypted database and injected as context into every new AI prompt, allowing the chatbot to maintain conversational continuity. The chatbot supports multiple languages and always responds in the same language the user writes in.
 
 ### 2.4 Daily Notification & Chat Sessions
 
@@ -90,7 +90,7 @@ Any task, todo, or reminder that is overdue and unresolved is treated as a misse
 
 ### 3.2 Why These Choices
 
-**React Native** was chosen over Flutter for its JavaScript/TypeScript ecosystem, mature library support, and wide developer familiarity. **WatermelonDB** was chosen over plain SQLite for its React Native-optimized lazy loading and better performance as data grows. **Llama 3.2 3B** was chosen for its best-in-class quality among lightweight models, strong multilingual support, and open-source licensing. **Firebase Firestore** was chosen for its built-in offline support, generous free tier, and easy React Native integration. **Zustand** was chosen over Redux for its minimal boilerplate and simplicity, which is appropriate for Buddi as a single-user personal app.
+**React Native** was chosen over Flutter for its JavaScript/TypeScript ecosystem, mature library support, and wide developer familiarity. **WatermelonDB** was chosen over plain SQLite for its React Native-optimized lazy loading and better performance as data grows. **Llama 3.2 3B** was chosen for its best-in-class quality among lightweight models, strong multilingual support, and open-source licensing. **Firebase Firestore** was chosen for its built-in offline support, generous free tier, and easy React Native integration. **Zustand** was chosen over Redux for its minimal boilerplate and simplicity, which is appropriate for BuddyAi as a single-user personal app.
 
 ### 3.3 Minimum Requirements
 
@@ -386,7 +386,7 @@ Every user message goes through a 4-step pipeline. First, **PromptBuilder** asse
 
 ```
 [SYSTEM PROMPT]
-You are Buddi, a friendly personal assistant app.
+You are BuddyAi, a friendly personal assistant app.
 You help manage people, tasks, todos, and reminders.
 Today's date is {date}. Current time is {time}.
 
@@ -809,7 +809,7 @@ src/
 
 | Attribute | Detail |
 |---|---|
-| **App Name** | Buddi |
+| **App Name** | BuddyAi |
 | **Primary Tagline** | Your smart daily companion |
 | **Alternate Taglines** | "The buddy who never forgets" · "Your people. Your tasks. Your day." · "Always by your side" |
 | **Tone** | Warm, friendly, personal — speaks like a helpful companion, never robotic |
@@ -863,7 +863,7 @@ The chosen icon concept is **Spark** — a chat bubble with a sparkle star. This
 
 **Theme:** Dark mode first. Light mode uses soft lavender white (#F5F4FF) with indigo accents.
 
-**Voice & Tone:** Short sentences, warm and encouraging, always action-oriented. Buddi speaks like a friendly buddy — never robotic or formal.
+**Voice & Tone:** Short sentences, warm and encouraging, always action-oriented. BuddyAi speaks like a friendly buddy — never robotic or formal.
 
 ---
 
@@ -871,7 +871,7 @@ The chosen icon concept is **Spark** — a chat bubble with a sparkle star. This
 
 ### 13.1 Overview
 
-The development is broken into 6 phases. Each phase delivers a working, testable slice of Buddi. Later phases build on top of earlier ones. The goal is to have a fully functional personal app by the end of Phase 6.
+The development is broken into 6 phases. Each phase delivers a working, testable slice of BuddyAi. Later phases build on top of earlier ones. The goal is to have a fully functional personal app by the end of Phase 6.
 
 | Phase | Name | Focus | Estimated Duration |
 |---|---|---|---|
@@ -1128,4 +1128,4 @@ The goal of this phase is to add missed item handling, complete all settings scr
 
 ---
 
-*End of Buddi Technical Document — v1.0*
+*End of BuddyAi Technical Document — v1.0*

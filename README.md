@@ -1,8 +1,8 @@
-# Buddi — Your Smart Daily Companion
+# BuddyAi — Your Smart Daily Companion
 
 > A personal productivity app powered by on-device AI
 
-Buddi helps you manage your personal relationships, daily tasks, todos, and reminders through a conversational AI chatbot. Everything runs on-device — no cloud AI, no data leaks.
+BuddyAi helps you manage your personal relationships, daily tasks, todos, and reminders through a conversational AI chatbot. Everything runs on-device — no cloud AI, no data leaks.
 
 ## Features
 
