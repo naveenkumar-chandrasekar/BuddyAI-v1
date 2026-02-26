@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.yarn/
+
+# Android
+android/
+*.keystore
+!debug.keystore
+
+# iOS (not applicable but common in RN repos)
+ios/
+
+# Build outputs
+*.apk
+*.aab
+build/
+dist/
+
+# React Native
+.metro-cache/
+.metro-health-check*
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+google-services.json
+GoogleService-Info.plist
+firebase.json
+
+# AI model files — too large for git
+*.gguf
+*.bin
+*.ggml
+src/assets/models/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Gradle
+.gradle/
+
+# Misc
+.watchmanconfig
