@@ -39,10 +39,10 @@ describe('MMKV storage', () => {
     });
   });
 
-  describe('delete', () => {
+  describe('remove', () => {
     it('removes a key', () => {
       storage.set('user_name', 'Naveen');
-      storage.delete('user_name');
+      storage.remove('user_name');
       expect(storage.getString('user_name')).toBeUndefined();
     });
   });
