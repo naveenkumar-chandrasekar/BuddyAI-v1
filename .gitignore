@@ -2,8 +2,13 @@
 node_modules/
 .yarn/
 
-# Android
-android/
+# Android generated/local files
+android/local.properties
+android/.gradle/
+android/app/build/
+android/build/
+android/captures/
+android/.idea/
 *.keystore
 !debug.keystore
 
