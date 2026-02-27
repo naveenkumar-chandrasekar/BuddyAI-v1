@@ -11,6 +11,8 @@ import { storage } from './src/core/storage/mmkv';
 import { getOrCreateKey } from './src/core/security/KeystoreService';
 import { initDatabase } from './src/data/database/database';
 import { syncToFirebase } from './src/domain/usecases/sync/SyncUseCase';
+import notifee, { EventType } from '@notifee/react-native';
+import { dismissMissedItem } from './src/domain/usecases/tasks/DismissMissedItemUseCase';
 
 const linking: LinkingOptions<any> = {
   prefixes: ['buddyai://'],
@@ -40,6 +42,16 @@ const linking: LinkingOptions<any> = {
 };
 
 const BIRTHDAY_REFRESH_KEY = 'birthday_refresh_year';
+
+notifee.onBackgroundEvent(async ({ type, detail }) => {
+  if (type === EventType.ACTION_PRESS && detail.pressAction) {
+    const actionId = detail.pressAction.id;
+    const data = detail.notification?.data as Record<string, string> | undefined;
+    if (actionId?.startsWith('dismiss-') && data?.type && data?.itemId) {
+      await dismissMissedItem(data.type as 'task' | 'todo' | 'reminder', data.itemId);
+    }
+  }
+});
 
 export default function App() {
   useEffect(() => {

@@ -43,16 +43,18 @@ BuddyAi helps you manage your personal relationships, daily tasks, todos, and re
 
 ## Project Status
 
-> Planning & Design Phase — February 2026
+All 6 phases complete — 233 tests, 0 lint warnings.
 
-| Phase | Name | Status |
-|---|---|---|
-| 1 | Foundation | Pending |
-| 2 | Core Data | Pending |
-| 3 | Notifications | Pending |
-| 4 | Chatbot | Pending |
-| 5 | Security & Sync | Pending |
-| 6 | Polish | Pending |
+## Implementation Timeline
+
+| Phase | Name | What was built | Effort |
+|---|---|---|---|
+| 1 | Foundation | RN 0.84 scaffold, navigation shell (5-screen onboarding + 4-tab main), WatermelonDB schema & models (13 tables), MMKV singleton, CI baseline | 1 session |
+| 2 | Core Data | Domain models, 5 repositories, 9 use cases, Zustand stores, People/Tasks/Onboarding screens with full CRUD | 2 sessions |
+| 3 | Notifications | Notifee channels, daily summary scheduler, birthday reminder engine, missed-item re-reminder checker, background-fetch service | 1 session |
+| 4 | Chatbot | llama.rn integration, LlamaService, PromptBuilder, IntentParser (7 intent types), ActionExecutor, ChatHistoryScreen, ChatScreen, AI daily summary | 2 sessions |
+| 5 | Security & Sync | SQLCipher AES-256, Android Keystore key management, Firebase Auth (Google sign-in), Firestore encrypted sync (upload/incremental/download), SyncSettingsScreen | 1 session |
+| 6 | Polish | Missed-item dismiss UI across all 3 task screens, all 4 settings screens wired to DB/MMKV, Notifee background dismiss handler, GitHub Actions APK build job | 1 session |
 
 ## Architecture
 

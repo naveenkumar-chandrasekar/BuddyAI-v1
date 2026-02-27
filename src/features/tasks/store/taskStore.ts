@@ -4,6 +4,7 @@ import { getTasks, getTodos, getReminders } from '../../../domain/usecases/tasks
 import { addTask, addTodo, addReminder } from '../../../domain/usecases/tasks/AddTaskUseCase';
 import { updateTask, toggleTodo, updateReminder } from '../../../domain/usecases/tasks/UpdateTaskUseCase';
 import { deleteTask, deleteTodo, deleteReminder } from '../../../domain/usecases/tasks/DeleteTaskUseCase';
+import { dismissMissedItem } from '../../../domain/usecases/tasks/DismissMissedItemUseCase';
 
 interface TaskState {
   tasks: Task[];
@@ -22,6 +23,7 @@ interface TaskState {
   addReminder(input: CreateReminderInput): Promise<Reminder>;
   updateReminder(id: string, input: UpdateReminderInput): Promise<Reminder>;
   deleteReminder(id: string): Promise<void>;
+  dismissItem(type: 'task' | 'todo' | 'reminder', id: string): Promise<void>;
 }
 
 export const useTaskStore = create<TaskState>((set, _get) => ({
@@ -93,5 +95,16 @@ export const useTaskStore = create<TaskState>((set, _get) => ({
   async deleteReminder(id) {
     await deleteReminder(id);
     set(s => ({ reminders: s.reminders.filter(r => r.id !== id) }));
+  },
+
+  async dismissItem(type, id) {
+    await dismissMissedItem(type, id);
+    if (type === 'task') {
+      set(s => ({ tasks: s.tasks.map(t => t.id === id ? { ...t, isDismissed: true } : t) }));
+    } else if (type === 'todo') {
+      set(s => ({ todos: s.todos.map(t => t.id === id ? { ...t, isDismissed: true } : t) }));
+    } else {
+      set(s => ({ reminders: s.reminders.map(r => r.id === id ? { ...r, isDismissed: true } : r) }));
+    }
   },
 }));
