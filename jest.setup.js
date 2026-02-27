@@ -129,3 +129,11 @@ jest.mock('react-native-background-fetch', () => ({
     STATUS_AVAILABLE: 2,
   },
 }));
+
+jest.mock('llama.rn', () => ({
+  __esModule: true,
+  initLlama: jest.fn().mockResolvedValue({
+    completion: jest.fn().mockResolvedValue({ text: '{"intent":"CONVERSATION_INTENT","action":"GENERAL_CHAT","message":"Hello!","data":{}}' }),
+    release: jest.fn().mockResolvedValue(undefined),
+  }),
+}));
