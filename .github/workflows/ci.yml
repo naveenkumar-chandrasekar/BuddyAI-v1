@@ -60,6 +60,7 @@ jobs:
 
       - name: Decode keystore
         run: |
+          mkdir -p android/app
           echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
       - name: Build release APK
