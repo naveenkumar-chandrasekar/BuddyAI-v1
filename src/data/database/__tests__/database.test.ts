@@ -1,12 +1,12 @@
-import { db } from '../database';
+import { getDb } from '../database';
 
-describe('Database singleton', () => {
-  it('is defined', () => {
-    expect(db).toBeDefined();
+describe('Database', () => {
+  it('getDb() returns a defined instance', () => {
+    expect(getDb()).toBeDefined();
   });
 
   it('exposes a collections accessor', () => {
-    expect(db.collections).toBeDefined();
+    expect(getDb().collections).toBeDefined();
   });
 
   it('has a collection for every entity table', () => {
@@ -27,7 +27,7 @@ describe('Database singleton', () => {
     ];
 
     for (const table of expectedTables) {
-      expect(() => db.collections.get(table)).not.toThrow();
+      expect(() => getDb().collections.get(table)).not.toThrow();
     }
   });
 });

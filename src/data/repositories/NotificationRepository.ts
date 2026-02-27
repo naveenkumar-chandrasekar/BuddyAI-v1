@@ -1,5 +1,5 @@
 import { Q } from '@nozbe/watermelondb';
-import { db } from '../database/database';
+import { getDb } from '../database/database';
 import { NotificationConfigModel, BirthdayReminderModel } from '../database/models/NotifModel';
 import type {
   NotificationConfig,
@@ -39,7 +39,7 @@ function toBirthdayReminder(m: BirthdayReminderModel): BirthdayReminder {
 }
 
 export class NotificationConfigRepository {
-  private collection = db.collections.get<NotificationConfigModel>('notification_config');
+  private get collection() { return getDb().collections.get<NotificationConfigModel>('notification_config'); }
 
   async get(): Promise<NotificationConfig | null> {
     const records = await this.collection.query().fetch();
@@ -47,7 +47,7 @@ export class NotificationConfigRepository {
   }
 
   async create(input: CreateNotificationConfigInput): Promise<NotificationConfig> {
-    const record = await db.write(async () =>
+    const record = await getDb().write(async () =>
       this.collection.create(r => {
         r.dailyNotifTime = input.dailyNotifTime;
         r.dailyNotifEnabled = input.dailyNotifEnabled ? 1 : 0;
@@ -67,7 +67,7 @@ export class NotificationConfigRepository {
   }
 
   async update(id: string, input: UpdateNotificationConfigInput): Promise<NotificationConfig> {
-    const record = await db.write(async () => {
+    const record = await getDb().write(async () => {
       const r = await this.collection.find(id);
       await r.update(m => {
         if (input.dailyNotifTime !== undefined) m.dailyNotifTime = input.dailyNotifTime;
@@ -90,7 +90,7 @@ export class NotificationConfigRepository {
 }
 
 export class BirthdayReminderRepository {
-  private collection = db.collections.get<BirthdayReminderModel>('birthday_reminders');
+  private get collection() { return getDb().collections.get<BirthdayReminderModel>('birthday_reminders'); }
 
   async getAll(): Promise<BirthdayReminder[]> {
     const records = await this.collection.query().fetch();
@@ -117,7 +117,7 @@ export class BirthdayReminderRepository {
     remindOn: string;
     daysBefore: number;
   }): Promise<BirthdayReminder> {
-    const record = await db.write(async () =>
+    const record = await getDb().write(async () =>
       this.collection.create(r => {
         r.personId = input.personId;
         r.birthdayDate = input.birthdayDate;
@@ -131,21 +131,21 @@ export class BirthdayReminderRepository {
   }
 
   async markNotified(id: string): Promise<void> {
-    await db.write(async () => {
+    await getDb().write(async () => {
       const r = await this.collection.find(id);
       await r.update(m => { m.isNotified = 1; });
     });
   }
 
   async dismiss(id: string): Promise<void> {
-    await db.write(async () => {
+    await getDb().write(async () => {
       const r = await this.collection.find(id);
       await r.update(m => { m.isDismissed = 1; });
     });
   }
 
   async deleteByPersonId(personId: string): Promise<void> {
-    await db.write(async () => {
+    await getDb().write(async () => {
       const records = await this.collection
         .query(Q.where('person_id', personId))
         .fetch();
@@ -154,7 +154,7 @@ export class BirthdayReminderRepository {
   }
 
   async deleteAll(): Promise<void> {
-    await db.write(async () => {
+    await getDb().write(async () => {
       const records = await this.collection.query().fetch();
       await Promise.all(records.map(r => r.destroyPermanently()));
     });

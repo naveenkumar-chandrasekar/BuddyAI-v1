@@ -1,5 +1,5 @@
 import { Q } from '@nozbe/watermelondb';
-import { db } from '../database/database';
+import { getDb } from '../database/database';
 import TaskModel from '../database/models/TaskModel';
 import TodoModel from '../database/models/TodoModel';
 import ReminderModel from '../database/models/ReminderModel';
@@ -78,7 +78,7 @@ function toReminder(m: ReminderModel): Reminder {
 }
 
 export class TaskRepository implements ITaskRepository {
-  private collection = db.collections.get<TaskModel>('tasks');
+  private get collection() { return getDb().collections.get<TaskModel>('tasks'); }
 
   async getAll(): Promise<Task[]> {
     const records = await this.collection.query(Q.where('is_deleted', 0)).fetch();
@@ -100,7 +100,7 @@ export class TaskRepository implements ITaskRepository {
   }
 
   async create(input: CreateTaskInput): Promise<Task> {
-    const record = await db.write(async () =>
+    const record = await getDb().write(async () =>
       this.collection.create(r => {
         r.title = input.title;
         r.description = input.description ?? null;
@@ -122,7 +122,7 @@ export class TaskRepository implements ITaskRepository {
   }
 
   async update(id: string, input: UpdateTaskInput): Promise<Task> {
-    const record = await db.write(async () => {
+    const record = await getDb().write(async () => {
       const r = await this.collection.find(id);
       await r.update(m => {
         if (input.title !== undefined) m.title = input.title;
@@ -146,7 +146,7 @@ export class TaskRepository implements ITaskRepository {
   }
 
   async remove(id: string): Promise<void> {
-    await db.write(async () => {
+    await getDb().write(async () => {
       const r = await this.collection.find(id);
       await r.update(m => { m.isDeleted = 1; });
     });
@@ -154,7 +154,7 @@ export class TaskRepository implements ITaskRepository {
 }
 
 export class TodoRepository implements ITodoRepository {
-  private collection = db.collections.get<TodoModel>('todos');
+  private get collection() { return getDb().collections.get<TodoModel>('todos'); }
 
   async getAll(): Promise<Todo[]> {
     const records = await this.collection.query(Q.where('is_deleted', 0)).fetch();
@@ -176,7 +176,7 @@ export class TodoRepository implements ITodoRepository {
   }
 
   async create(input: CreateTodoInput): Promise<Todo> {
-    const record = await db.write(async () =>
+    const record = await getDb().write(async () =>
       this.collection.create(r => {
         r.title = input.title;
         r.isCompleted = 0;
@@ -196,7 +196,7 @@ export class TodoRepository implements ITodoRepository {
   }
 
   async update(id: string, input: UpdateTodoInput): Promise<Todo> {
-    const record = await db.write(async () => {
+    const record = await getDb().write(async () => {
       const r = await this.collection.find(id);
       await r.update(m => {
         if (input.title !== undefined) m.title = input.title;
@@ -216,7 +216,7 @@ export class TodoRepository implements ITodoRepository {
   }
 
   async toggleComplete(id: string): Promise<Todo> {
-    const record = await db.write(async () => {
+    const record = await getDb().write(async () => {
       const r = await this.collection.find(id);
       await r.update(m => {
         m.isCompleted = m.isCompleted === 1 ? 0 : 1;
@@ -228,7 +228,7 @@ export class TodoRepository implements ITodoRepository {
   }
 
   async remove(id: string): Promise<void> {
-    await db.write(async () => {
+    await getDb().write(async () => {
       const r = await this.collection.find(id);
       await r.update(m => { m.isDeleted = 1; });
     });
@@ -236,7 +236,7 @@ export class TodoRepository implements ITodoRepository {
 }
 
 export class ReminderRepository implements IReminderRepository {
-  private collection = db.collections.get<ReminderModel>('reminders');
+  private get collection() { return getDb().collections.get<ReminderModel>('reminders'); }
 
   async getAll(): Promise<Reminder[]> {
     const records = await this.collection.query(Q.where('is_deleted', 0)).fetch();
@@ -266,7 +266,7 @@ export class ReminderRepository implements IReminderRepository {
   }
 
   async create(input: CreateReminderInput): Promise<Reminder> {
-    const record = await db.write(async () =>
+    const record = await getDb().write(async () =>
       this.collection.create(r => {
         r.title = input.title;
         r.description = input.description ?? null;
@@ -289,7 +289,7 @@ export class ReminderRepository implements IReminderRepository {
   }
 
   async update(id: string, input: UpdateReminderInput): Promise<Reminder> {
-    const record = await db.write(async () => {
+    const record = await getDb().write(async () => {
       const r = await this.collection.find(id);
       await r.update(m => {
         if (input.title !== undefined) m.title = input.title;
@@ -313,7 +313,7 @@ export class ReminderRepository implements IReminderRepository {
   }
 
   async remove(id: string): Promise<void> {
-    await db.write(async () => {
+    await getDb().write(async () => {
       const r = await this.collection.find(id);
       await r.update(m => { m.isDeleted = 1; });
     });

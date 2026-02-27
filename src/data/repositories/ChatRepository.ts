@@ -1,5 +1,5 @@
 import { Q } from '@nozbe/watermelondb';
-import { db } from '../database/database';
+import { getDb } from '../database/database';
 import { ChatSessionModel, ChatMessageModel } from '../database/models/ChatModel';
 import type {
   ChatSession,
@@ -37,7 +37,7 @@ function toMessage(m: ChatMessageModel): ChatMessage {
 }
 
 export class ChatSessionRepository {
-  private collection = db.collections.get<ChatSessionModel>('chat_sessions');
+  private get collection() { return getDb().collections.get<ChatSessionModel>('chat_sessions'); }
 
   async getAll(): Promise<ChatSession[]> {
     const records = await this.collection
@@ -61,7 +61,7 @@ export class ChatSessionRepository {
   }
 
   async create(input: CreateChatSessionInput): Promise<ChatSession> {
-    const record = await db.write(async () =>
+    const record = await getDb().write(async () =>
       this.collection.create(r => {
         r.sessionDate = input.sessionDate;
         r.title = input.title ?? null;
@@ -73,7 +73,7 @@ export class ChatSessionRepository {
   }
 
   async updateSummary(id: string, summary: string): Promise<void> {
-    await db.write(async () => {
+    await getDb().write(async () => {
       const r = await this.collection.find(id);
       await r.update(m => { m.summary = summary; });
     });
@@ -81,7 +81,7 @@ export class ChatSessionRepository {
 }
 
 export class ChatMessageRepository {
-  private collection = db.collections.get<ChatMessageModel>('chat_messages');
+  private get collection() { return getDb().collections.get<ChatMessageModel>('chat_messages'); }
 
   async getBySessionId(sessionId: string): Promise<ChatMessage[]> {
     const records = await this.collection
@@ -102,7 +102,7 @@ export class ChatMessageRepository {
   }
 
   async create(input: CreateChatMessageInput): Promise<ChatMessage> {
-    const record = await db.write(async () =>
+    const record = await getDb().write(async () =>
       this.collection.create(r => {
         r.sessionId = input.sessionId;
         r.sender = input.sender;

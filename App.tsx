@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { AppState } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import type { LinkingOptions } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -7,8 +8,10 @@ import { createNotificationChannels } from './src/core/notifications/NotifeeServ
 import { initBackgroundFetch } from './src/core/notifications/BackgroundService';
 import { populateBirthdayReminders } from './src/domain/usecases/notifications/BirthdayReminderUseCase';
 import { storage } from './src/core/storage/mmkv';
+import { getOrCreateKey } from './src/core/security/KeystoreService';
+import { initDatabase } from './src/data/database/database';
+import { syncToFirebase } from './src/domain/usecases/sync/SyncUseCase';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const linking: LinkingOptions<any> = {
   prefixes: ['buddyai://'],
   config: {
@@ -41,6 +44,9 @@ const BIRTHDAY_REFRESH_KEY = 'birthday_refresh_year';
 export default function App() {
   useEffect(() => {
     async function bootstrap() {
+      const encKey = await getOrCreateKey();
+      initDatabase(encKey);
+
       await createNotificationChannels();
       await initBackgroundFetch();
 
@@ -53,6 +59,13 @@ export default function App() {
     }
 
     bootstrap();
+
+    const sub = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        syncToFirebase().catch(() => {});
+      }
+    });
+    return () => sub.remove();
   }, []);
 
   return (

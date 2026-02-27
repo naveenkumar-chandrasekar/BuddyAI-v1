@@ -130,6 +130,51 @@ jest.mock('react-native-background-fetch', () => ({
   },
 }));
 
+jest.mock('react-native-keychain', () => ({
+  getGenericPassword: jest.fn().mockResolvedValue(false),
+  setGenericPassword: jest.fn().mockResolvedValue(true),
+  resetGenericPassword: jest.fn().mockResolvedValue(true),
+}));
+
+jest.mock('@react-native-firebase/app', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({})),
+}));
+
+jest.mock('@react-native-firebase/auth', () => {
+  const mockUser = null;
+  const authInstance = {
+    currentUser: mockUser,
+    signInWithCredential: jest.fn().mockResolvedValue({ user: { uid: 'u1', email: 'test@test.com', displayName: 'Test' } }),
+    signOut: jest.fn().mockResolvedValue(undefined),
+    onAuthStateChanged: jest.fn(cb => { cb(null); return () => {}; }),
+  };
+  const authFn = jest.fn(() => authInstance);
+  authFn.GoogleAuthProvider = { credential: jest.fn(() => ({})) };
+  return { __esModule: true, default: authFn };
+});
+
+jest.mock('@react-native-firebase/firestore', () => {
+  const batchMock = { set: jest.fn(), commit: jest.fn().mockResolvedValue(undefined) };
+  const docMock = { set: jest.fn().mockResolvedValue(undefined), get: jest.fn().mockResolvedValue({ exists: false, data: () => ({}) }) };
+  const snapshotMock = { empty: true, docs: [] };
+  const colMock = { doc: jest.fn(() => docMock), get: jest.fn().mockResolvedValue(snapshotMock) };
+  const firestoreInstance = {
+    batch: jest.fn(() => batchMock),
+    collection: jest.fn(() => ({ doc: jest.fn(() => ({ collection: jest.fn(() => colMock) })) })),
+  };
+  return { __esModule: true, default: jest.fn(() => firestoreInstance) };
+});
+
+jest.mock('@react-native-google-signin/google-signin', () => ({
+  GoogleSignin: {
+    configure: jest.fn(),
+    hasPlayServices: jest.fn().mockResolvedValue(true),
+    signIn: jest.fn().mockResolvedValue({ data: { idToken: 'mock-token' } }),
+    signOut: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 jest.mock('llama.rn', () => ({
   __esModule: true,
   initLlama: jest.fn().mockResolvedValue({

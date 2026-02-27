@@ -19,30 +19,42 @@ import {
   BirthdayReminderModel,
 } from './models/NotifModel';
 
-const adapter = new SQLiteAdapter({
-  schema,
-  dbName: 'buddyai',
-  jsi: true,
-  onSetUpError: error => {
-    console.error('[WatermelonDB] Setup error:', error);
-  },
-});
+const MODEL_CLASSES = [
+  PlaceModel,
+  PersonModel,
+  TaskModel,
+  TodoModel,
+  ReminderModel,
+  ChatSessionModel,
+  ChatMessageModel,
+  ChatSessionPersonModel,
+  ChatSessionTaskModel,
+  ChatSessionTodoModel,
+  ChatSessionReminderModel,
+  NotificationConfigModel,
+  BirthdayReminderModel,
+];
 
-export const db = new Database({
-  adapter,
-  modelClasses: [
-    PlaceModel,
-    PersonModel,
-    TaskModel,
-    TodoModel,
-    ReminderModel,
-    ChatSessionModel,
-    ChatMessageModel,
-    ChatSessionPersonModel,
-    ChatSessionTaskModel,
-    ChatSessionTodoModel,
-    ChatSessionReminderModel,
-    NotificationConfigModel,
-    BirthdayReminderModel,
-  ],
-});
+let _db: Database | null = null;
+
+export function initDatabase(encryptionKey: string): void {
+  if (_db) return;
+  const adapterOptions: any = {
+    schema,
+    dbName: 'buddyai',
+    jsi: true,
+    encryptionKey: encryptionKey || undefined,
+    onSetUpError: (error: Error) => {
+      console.error('[WatermelonDB] Setup error:', error);
+    },
+  };
+  const adapter = new SQLiteAdapter(adapterOptions);
+  _db = new Database({ adapter, modelClasses: MODEL_CLASSES });
+}
+
+export function getDb(): Database {
+  if (!_db) {
+    initDatabase('');
+  }
+  return _db as Database;
+}

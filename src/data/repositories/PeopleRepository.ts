@@ -1,5 +1,5 @@
 import { Q } from '@nozbe/watermelondb';
-import { db } from '../database/database';
+import { getDb } from '../database/database';
 import PersonModel from '../database/models/PersonModel';
 import type { IPeopleRepository } from '../../domain/repositories/IPeopleRepository';
 import type { Person, CreatePersonInput, UpdatePersonInput } from '../../domain/models/Person';
@@ -23,7 +23,7 @@ function toPerson(m: PersonModel): Person {
 }
 
 export class PeopleRepository implements IPeopleRepository {
-  private collection = db.collections.get<PersonModel>('people');
+  private get collection() { return getDb().collections.get<PersonModel>('people'); }
 
   async getAll(): Promise<Person[]> {
     const records = await this.collection
@@ -55,7 +55,7 @@ export class PeopleRepository implements IPeopleRepository {
   }
 
   async create(input: CreatePersonInput): Promise<Person> {
-    const record = await db.write(async () =>
+    const record = await getDb().write(async () =>
       this.collection.create(r => {
         r.name = input.name;
         r.relationshipType = input.relationshipType;
@@ -72,7 +72,7 @@ export class PeopleRepository implements IPeopleRepository {
   }
 
   async update(id: string, input: UpdatePersonInput): Promise<Person> {
-    const record = await db.write(async () => {
+    const record = await getDb().write(async () => {
       const r = await this.collection.find(id);
       await r.update(m => {
         if (input.name !== undefined) m.name = input.name;
@@ -90,7 +90,7 @@ export class PeopleRepository implements IPeopleRepository {
   }
 
   async remove(id: string): Promise<void> {
-    await db.write(async () => {
+    await getDb().write(async () => {
       const record = await this.collection.find(id);
       await record.update(r => {
         r.isDeleted = 1;

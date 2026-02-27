@@ -1,4 +1,4 @@
-import { db } from '../database/database';
+import { getDb } from '../database/database';
 import PlaceModel from '../database/models/PlaceModel';
 import type { IPlacesRepository } from '../../domain/repositories/IPlacesRepository';
 import type { Place, CreatePlaceInput } from '../../domain/models/Place';
@@ -15,7 +15,7 @@ function toPlace(m: PlaceModel): Place {
 }
 
 export class PlacesRepository implements IPlacesRepository {
-  private collection = db.collections.get<PlaceModel>('places');
+  private get collection() { return getDb().collections.get<PlaceModel>('places'); }
 
   async getAll(): Promise<Place[]> {
     const records = await this.collection.query().fetch();
@@ -33,7 +33,7 @@ export class PlacesRepository implements IPlacesRepository {
 
   async create(input: CreatePlaceInput): Promise<Place> {
     const now = Date.now();
-    const record = await db.write(async () =>
+    const record = await getDb().write(async () =>
       this.collection.create(r => {
         r.name = input.name;
         r.type = input.type;
@@ -45,7 +45,7 @@ export class PlacesRepository implements IPlacesRepository {
   }
 
   async remove(id: string): Promise<void> {
-    await db.write(async () => {
+    await getDb().write(async () => {
       const record = await this.collection.find(id);
       await record.update(r => {
         r.isDeleted = 1;
