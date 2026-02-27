@@ -27,7 +27,7 @@ function birthdayDateForYear(birthday: string, year: number): string {
   return `${year}-${month}-${day}`;
 }
 
-function daysBefore(person: Person, config: {
+function getLeadDays(person: Person, config: {
   highPriorityDays: number;
   mediumPriorityDays: number;
   lowPriorityDays: number;
@@ -54,7 +54,7 @@ export async function populateBirthdayReminders(): Promise<void> {
   for (const person of people) {
     if (!person.birthday) continue;
 
-    const db = daysBefore(person, cfg);
+    const db = getLeadDays(person, cfg);
     const remindOnDate = nextBirthdayDate(person.birthday, db);
     if (!remindOnDate) continue;
 
