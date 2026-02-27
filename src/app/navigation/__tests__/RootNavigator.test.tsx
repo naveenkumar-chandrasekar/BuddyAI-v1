@@ -15,13 +15,13 @@ describe('RootNavigator — onboarding gate', () => {
 
   it('shows onboarding when onboarding_done is not set', async () => {
     render(<RootNavigator />, { wrapper: Wrapper });
-    expect(await screen.findByText('OnboardingWelcomeScreen')).toBeTruthy();
+    expect(await screen.findByText('Get Started')).toBeTruthy();
   });
 
   it('shows onboarding when onboarding_done is false', async () => {
     storage.set('onboarding_done', false);
     render(<RootNavigator />, { wrapper: Wrapper });
-    expect(await screen.findByText('OnboardingWelcomeScreen')).toBeTruthy();
+    expect(await screen.findByText('Get Started')).toBeTruthy();
   });
 
   it('shows main app when onboarding_done is true', async () => {

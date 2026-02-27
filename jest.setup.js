@@ -96,3 +96,36 @@ jest.mock('@react-navigation/bottom-tabs', () => ({
 jest.mock('@react-navigation/material-top-tabs', () => ({
   createMaterialTopTabNavigator: mockNavigatorFactory,
 }));
+
+jest.mock('@notifee/react-native', () => ({
+  __esModule: true,
+  default: {
+    createChannel: jest.fn().mockResolvedValue(undefined),
+    createTriggerNotification: jest.fn().mockResolvedValue('notif-id'),
+    cancelNotification: jest.fn().mockResolvedValue(undefined),
+    displayNotification: jest.fn().mockResolvedValue('notif-id'),
+    getInitialNotification: jest.fn().mockResolvedValue(null),
+    onForegroundEvent: jest.fn(() => () => {}),
+    onBackgroundEvent: jest.fn(),
+    getTriggerNotificationIds: jest.fn().mockResolvedValue([]),
+    cancelAllNotifications: jest.fn().mockResolvedValue(undefined),
+  },
+  AndroidImportance: { HIGH: 4, DEFAULT: 3, LOW: 2, MIN: 1, NONE: 0 },
+  AndroidVisibility: { PUBLIC: 1, PRIVATE: 0, SECRET: -1 },
+  TriggerType: { TIMESTAMP: 0, INTERVAL: 1 },
+  EventType: { DISMISSED: 0, PRESS: 1, ACTION_PRESS: 2, DELIVERED: 3 },
+}));
+
+jest.mock('react-native-background-fetch', () => ({
+  __esModule: true,
+  default: {
+    configure: jest.fn().mockResolvedValue(2),
+    start: jest.fn().mockResolvedValue(2),
+    stop: jest.fn().mockResolvedValue(true),
+    finish: jest.fn(),
+    scheduleTask: jest.fn().mockResolvedValue(true),
+    NETWORK_TYPE_NONE: 0,
+    NETWORK_TYPE_ANY: 1,
+    STATUS_AVAILABLE: 2,
+  },
+}));
