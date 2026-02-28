@@ -3,7 +3,9 @@ import { AppState } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import type { LinkingOptions } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { PaperProvider } from 'react-native-paper';
 import RootNavigator from './src/app/navigation/RootNavigator';
+import { AppTheme } from './src/shared/theme/theme';
 import { createNotificationChannels } from './src/core/notifications/NotifeeService';
 import { initBackgroundFetch } from './src/core/notifications/BackgroundService';
 import { populateBirthdayReminders } from './src/domain/usecases/notifications/BirthdayReminderUseCase';
@@ -141,10 +143,12 @@ export default function App() {
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <NavigationContainer linking={linking}>
-        <RootNavigator />
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <PaperProvider theme={AppTheme}>
+      <SafeAreaProvider>
+        <NavigationContainer linking={linking}>
+          <RootNavigator />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </PaperProvider>
   );
 }

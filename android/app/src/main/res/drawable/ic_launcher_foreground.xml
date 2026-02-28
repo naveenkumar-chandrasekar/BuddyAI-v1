@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Chat bubble body with tail -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,22 H76 Q86,22 86,32 V62 Q86,72 76,72 H40 L22,86 V72 H32 Q22,72 22,62 V32 Q22,22 32,22 Z" />
+
+    <!-- Message line 1 -->
+    <path
+        android:fillColor="#5B3EBF"
+        android:pathData="M35,38 H73 V44 H35 Z" />
+
+    <!-- Message line 2 -->
+    <path
+        android:fillColor="#5B3EBF"
+        android:pathData="M35,50 H73 V56 H35 Z" />
+
+    <!-- Message line 3 (shorter) -->
+    <path
+        android:fillColor="#5B3EBF"
+        android:pathData="M35,62 H57 V68 H35 Z" />
+
+</vector>
