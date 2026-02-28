@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import type {
   MainTabParamList,
   ChatStackParamList,
@@ -74,11 +75,39 @@ function SettingsNavigator() {
 
 export default function BottomTabNavigator() {
   return (
-    <Tab.Navigator>
-      <Tab.Screen name="ChatTab" component={ChatNavigator} options={{ title: 'Chat', headerShown: false }} />
-      <Tab.Screen name="PeopleTab" component={PeopleNavigator} options={{ title: 'People', headerShown: false }} />
-      <Tab.Screen name="TasksTab" component={TasksNavigator} options={{ title: 'Tasks', headerShown: false }} />
-      <Tab.Screen name="SettingsTab" component={SettingsNavigator} options={{ title: 'Settings', headerShown: false }} />
+    <Tab.Navigator screenOptions={{ headerShown: false }}>
+      <Tab.Screen
+        name="ChatTab"
+        component={ChatNavigator}
+        options={{
+          title: 'Chat',
+          tabBarIcon: ({ color, size }) => <Icon name="chat-outline" color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="PeopleTab"
+        component={PeopleNavigator}
+        options={{
+          title: 'People',
+          tabBarIcon: ({ color, size }) => <Icon name="account-group-outline" color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="TasksTab"
+        component={TasksNavigator}
+        options={{
+          title: 'Tasks',
+          tabBarIcon: ({ color, size }) => <Icon name="checkbox-marked-circle-outline" color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="SettingsTab"
+        component={SettingsNavigator}
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color, size }) => <Icon name="cog-outline" color={color} size={size} />,
+        }}
+      />
     </Tab.Navigator>
   );
 }

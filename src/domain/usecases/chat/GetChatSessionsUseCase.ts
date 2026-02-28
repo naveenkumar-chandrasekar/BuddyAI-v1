@@ -15,3 +15,8 @@ export async function getOrCreateTodaySession(): Promise<ChatSession> {
 export async function getSessionMessages(sessionId: string): Promise<ChatMessage[]> {
   return chatMessageRepository.getBySessionId(sessionId);
 }
+
+export async function createNewSession(): Promise<ChatSession> {
+  const today = new Date().toISOString().split('T')[0];
+  return chatSessionRepository.create({ sessionDate: today, isDaily: false });
+}
