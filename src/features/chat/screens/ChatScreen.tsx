@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View, FlatList, StyleSheet, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { Text, TextInput, IconButton, ActivityIndicator, Chip } from 'react-native-paper';
+import { Text, TextInput, IconButton, ActivityIndicator, Chip, Button } from 'react-native-paper';
 import type { ChatScreenProps } from '../../../app/navigation/types';
 import { useChatStore } from '../store/chatStore';
 import { llamaService } from '../../../core/ai/LlamaService';
@@ -13,6 +13,8 @@ const QUICK_ACTIONS = [
   "Show missed items",
   "What's upcoming?",
 ];
+
+type ModelState = 'loading' | 'ready' | 'error';
 
 function MessageBubble({ msg }: { msg: ChatMessage }) {
   const isUser = msg.sender === 'user';
@@ -43,7 +45,9 @@ export default function ChatScreen({ route }: ChatScreenProps) {
   const { activeSession, messages, loading, sending, openSession, openTodaySession, send } =
     useChatStore();
   const [input, setInput] = useState('');
-  const [modelReady, setModelReady] = useState(llamaService.isInitialized);
+  const [modelState, setModelState] = useState<ModelState>(
+    llamaService.isInitialized ? 'ready' : llamaService.isLoading ? 'loading' : 'loading',
+  );
   const listRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -56,13 +60,20 @@ export default function ChatScreen({ route }: ChatScreenProps) {
     }
   }, [sessionId, openToday, openSession, openTodaySession]);
 
+  const startModelInit = useCallback(() => {
+    setModelState('loading');
+    llamaService.initialize()
+      .then(() => setModelState('ready'))
+      .catch(() => setModelState('error'));
+  }, []);
+
   useEffect(() => {
     if (!llamaService.isInitialized) {
-      llamaService.initialize()
-        .then(() => setModelReady(true))
-        .catch(() => setModelReady(false));
+      startModelInit();
+    } else {
+      setModelState('ready');
     }
-  }, []);
+  }, [startModelInit]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -72,7 +83,7 @@ export default function ChatScreen({ route }: ChatScreenProps) {
 
   function handleSend(text?: string) {
     const msg = (text ?? input).trim();
-    if (!msg || sending || !modelReady) return;
+    if (!msg || sending) return;
     setInput('');
     send(msg);
   }
@@ -97,12 +108,23 @@ export default function ChatScreen({ route }: ChatScreenProps) {
         </Text>
       )}
 
-      {!modelReady && (
-        <View style={styles.modelLoadingBanner}>
+      {modelState === 'loading' && (
+        <View style={styles.modelBanner}>
           <ActivityIndicator size="small" color="#5B3EBF" />
-          <Text variant="bodySmall" style={styles.modelLoadingText}>
-            Loading AI model… this takes ~30s on first open
+          <Text variant="bodySmall" style={styles.modelBannerText}>
+            Loading AI model… (~30s on first open)
           </Text>
+        </View>
+      )}
+
+      {modelState === 'error' && (
+        <View style={[styles.modelBanner, styles.modelBannerError]}>
+          <Text variant="bodySmall" style={styles.modelBannerErrorText}>
+            Failed to load AI model.
+          </Text>
+          <Button compact onPress={startModelInit} textColor="#B3261E">
+            Retry
+          </Button>
         </View>
       )}
 
@@ -115,7 +137,7 @@ export default function ChatScreen({ route }: ChatScreenProps) {
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
       />
 
-      {messages.length === 0 && !loading && modelReady && (
+      {messages.length === 0 && !loading && modelState === 'ready' && (
         <View style={styles.quickActions}>
           {QUICK_ACTIONS.map(qa => (
             <Chip key={qa} style={styles.chip} onPress={() => handleSend(qa)}>
@@ -130,12 +152,12 @@ export default function ChatScreen({ route }: ChatScreenProps) {
           style={styles.input}
           mode="outlined"
           dense
-          placeholder={modelReady ? 'Ask BuddyAI anything...' : 'Model loading...'}
+          placeholder="Ask BuddyAI anything..."
           value={input}
           onChangeText={setInput}
           onSubmitEditing={() => handleSend()}
           returnKeyType="send"
-          disabled={sending || !modelReady}
+          disabled={sending}
         />
         {sending ? (
           <ActivityIndicator style={styles.sendBtn} />
@@ -144,7 +166,7 @@ export default function ChatScreen({ route }: ChatScreenProps) {
             icon="send"
             mode="contained"
             onPress={() => handleSend()}
-            disabled={!input.trim() || !modelReady}
+            disabled={!input.trim()}
             style={styles.sendBtn}
           />
         )}
@@ -157,7 +179,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   sessionDate: { textAlign: 'center', opacity: 0.4, paddingTop: 8 },
-  modelLoadingBanner: {
+  modelBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -165,7 +187,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  modelLoadingText: { color: '#5B3EBF', flex: 1 },
+  modelBannerText: { color: '#5B3EBF', flex: 1 },
+  modelBannerError: { backgroundColor: '#F9DEDC' },
+  modelBannerErrorText: { color: '#B3261E', flex: 1 },
   messageList: { padding: 12, paddingBottom: 4 },
   bubbleRow: { marginVertical: 4, flexDirection: 'row' },
   bubbleRowUser: { justifyContent: 'flex-end' },
