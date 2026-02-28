@@ -5,6 +5,7 @@ import {
 import { Text, TextInput, IconButton, ActivityIndicator, Chip } from 'react-native-paper';
 import type { ChatScreenProps } from '../../../app/navigation/types';
 import { useChatStore } from '../store/chatStore';
+import { llamaService } from '../../../core/ai/LlamaService';
 import type { ChatMessage } from '../../../domain/models/Chat';
 
 const QUICK_ACTIONS = [
@@ -42,6 +43,7 @@ export default function ChatScreen({ route }: ChatScreenProps) {
   const { activeSession, messages, loading, sending, openSession, openTodaySession, send } =
     useChatStore();
   const [input, setInput] = useState('');
+  const [modelReady, setModelReady] = useState(llamaService.isInitialized);
   const listRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -55,6 +57,14 @@ export default function ChatScreen({ route }: ChatScreenProps) {
   }, [sessionId, openToday, openSession, openTodaySession]);
 
   useEffect(() => {
+    if (!llamaService.isInitialized) {
+      llamaService.initialize()
+        .then(() => setModelReady(true))
+        .catch(() => setModelReady(false));
+    }
+  }, []);
+
+  useEffect(() => {
     if (messages.length > 0) {
       listRef.current?.scrollToEnd({ animated: true });
     }
@@ -62,7 +72,7 @@ export default function ChatScreen({ route }: ChatScreenProps) {
 
   function handleSend(text?: string) {
     const msg = (text ?? input).trim();
-    if (!msg || sending) return;
+    if (!msg || sending || !modelReady) return;
     setInput('');
     send(msg);
   }
@@ -87,6 +97,15 @@ export default function ChatScreen({ route }: ChatScreenProps) {
         </Text>
       )}
 
+      {!modelReady && (
+        <View style={styles.modelLoadingBanner}>
+          <ActivityIndicator size="small" color="#5B3EBF" />
+          <Text variant="bodySmall" style={styles.modelLoadingText}>
+            Loading AI model… this takes ~30s on first open
+          </Text>
+        </View>
+      )}
+
       <FlatList
         ref={listRef}
         data={messages}
@@ -96,7 +115,7 @@ export default function ChatScreen({ route }: ChatScreenProps) {
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
       />
 
-      {messages.length === 0 && !loading && (
+      {messages.length === 0 && !loading && modelReady && (
         <View style={styles.quickActions}>
           {QUICK_ACTIONS.map(qa => (
             <Chip key={qa} style={styles.chip} onPress={() => handleSend(qa)}>
@@ -111,12 +130,12 @@ export default function ChatScreen({ route }: ChatScreenProps) {
           style={styles.input}
           mode="outlined"
           dense
-          placeholder="Ask BuddyAi anything..."
+          placeholder={modelReady ? 'Ask BuddyAI anything...' : 'Model loading...'}
           value={input}
           onChangeText={setInput}
           onSubmitEditing={() => handleSend()}
           returnKeyType="send"
-          disabled={sending}
+          disabled={sending || !modelReady}
         />
         {sending ? (
           <ActivityIndicator style={styles.sendBtn} />
@@ -125,7 +144,7 @@ export default function ChatScreen({ route }: ChatScreenProps) {
             icon="send"
             mode="contained"
             onPress={() => handleSend()}
-            disabled={!input.trim()}
+            disabled={!input.trim() || !modelReady}
             style={styles.sendBtn}
           />
         )}
@@ -138,12 +157,21 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   sessionDate: { textAlign: 'center', opacity: 0.4, paddingTop: 8 },
+  modelLoadingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#EDE5FF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  modelLoadingText: { color: '#5B3EBF', flex: 1 },
   messageList: { padding: 12, paddingBottom: 4 },
   bubbleRow: { marginVertical: 4, flexDirection: 'row' },
   bubbleRowUser: { justifyContent: 'flex-end' },
   bubbleRowAi: { justifyContent: 'flex-start' },
   bubble: { maxWidth: '80%', borderRadius: 16, padding: 10 },
-  bubbleUser: { backgroundColor: '#6200ee' },
+  bubbleUser: { backgroundColor: '#5B3EBF' },
   bubbleAi: { backgroundColor: '#e0e0e0' },
   bubbleError: { backgroundColor: '#ffcdd2' },
   bubbleSummary: { backgroundColor: '#e8f5e9', borderWidth: 1, borderColor: '#a5d6a7' },

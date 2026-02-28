@@ -26,6 +26,7 @@ import {
 import { downloadKeyFromDrive } from './src/data/google-drive/DriveBackupService';
 import notifee, { EventType } from '@notifee/react-native';
 import { dismissMissedItem } from './src/domain/usecases/tasks/DismissMissedItemUseCase';
+import { llamaService } from './src/core/ai/LlamaService';
 
 const linking: LinkingOptions<any> = {
   prefixes: ['buddyai://'],
@@ -108,6 +109,8 @@ export default function App() {
         const encKey = await getOrCreateKey('anon');
         initDatabase(encKey);
       }
+
+      llamaService.initialize().catch(() => {});
 
       await createNotificationChannels();
       await initBackgroundFetch();
