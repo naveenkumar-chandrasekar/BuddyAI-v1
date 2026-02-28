@@ -1,7 +1,10 @@
 import * as Keychain from 'react-native-keychain';
 
-const SERVICE = 'com.buddyai.dbkey';
 const USERNAME = 'buddyai';
+
+function svc(userId: string): string {
+  return `com.buddyai.dbkey.${userId}`;
+}
 
 function generateHexKey(): string {
   const chars = '0123456789abcdef';
@@ -12,20 +15,24 @@ function generateHexKey(): string {
   return key;
 }
 
-export async function getOrCreateKey(): Promise<string> {
-  const existing = await Keychain.getGenericPassword({ service: SERVICE });
+export async function getOrCreateKey(userId: string): Promise<string> {
+  const existing = await Keychain.getGenericPassword({ service: svc(userId) });
   if (existing) return existing.password;
 
   const key = generateHexKey();
-  await Keychain.setGenericPassword(USERNAME, key, { service: SERVICE });
+  await Keychain.setGenericPassword(USERNAME, key, { service: svc(userId) });
   return key;
 }
 
-export async function getKey(): Promise<string | null> {
-  const result = await Keychain.getGenericPassword({ service: SERVICE });
+export async function getKey(userId: string): Promise<string | null> {
+  const result = await Keychain.getGenericPassword({ service: svc(userId) });
   return result ? result.password : null;
 }
 
-export async function clearKey(): Promise<void> {
-  await Keychain.resetGenericPassword({ service: SERVICE });
+export async function setKey(userId: string, key: string): Promise<void> {
+  await Keychain.setGenericPassword(USERNAME, key, { service: svc(userId) });
+}
+
+export async function clearKey(userId: string): Promise<void> {
+  await Keychain.resetGenericPassword({ service: svc(userId) });
 }

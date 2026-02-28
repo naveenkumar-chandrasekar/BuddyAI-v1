@@ -63,6 +63,10 @@ jobs:
           mkdir -p android/app
           echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
+      - name: Decode google-services.json
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > android/app/google-services.json
+
       - name: Build release APK
         run: ./gradlew assembleRelease
         working-directory: android

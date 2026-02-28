@@ -38,8 +38,8 @@ BuddyAi helps you manage your personal relationships, daily tasks, todos, and re
 | | |
 |---|---|
 | Platform | Android 10+ (API 29+) |
-| RAM | 3 GB minimum |
-| Storage | ~2.2 GB (model + app data) |
+| RAM | 2 GB minimum |
+| Storage | ~1.0 GB (model + app data) |
 
 ## Project Status
 

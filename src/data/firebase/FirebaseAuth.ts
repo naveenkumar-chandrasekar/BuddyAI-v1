@@ -10,7 +10,19 @@ export type AppUser = {
 const WEB_CLIENT_ID = '995905981250-idl1t826qh68l7lkg3rdi7684b5p5tuo.apps.googleusercontent.com';
 
 export function configureGoogleSignIn(): void {
-  GoogleSignin.configure({ webClientId: WEB_CLIENT_ID });
+  GoogleSignin.configure({
+    webClientId: WEB_CLIENT_ID,
+    scopes: ['https://www.googleapis.com/auth/drive.appdata'],
+  });
+}
+
+export async function getAccessToken(): Promise<string | null> {
+  try {
+    const tokens = await GoogleSignin.getTokens();
+    return tokens.accessToken;
+  } catch {
+    return null;
+  }
 }
 
 export async function signInWithGoogle(): Promise<AppUser> {

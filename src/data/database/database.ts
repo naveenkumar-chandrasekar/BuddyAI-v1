@@ -37,11 +37,12 @@ const MODEL_CLASSES = [
 
 let _db: Database | null = null;
 
-export function initDatabase(encryptionKey: string): void {
+export function initDatabase(encryptionKey: string, userId?: string): void {
   if (_db) return;
+  const dbName = userId ? `buddyai_${userId}` : 'buddyai';
   const adapterOptions: any = {
     schema,
-    dbName: 'buddyai',
+    dbName,
     jsi: true,
     encryptionKey: encryptionKey || undefined,
     onSetUpError: (error: Error) => {
@@ -50,6 +51,10 @@ export function initDatabase(encryptionKey: string): void {
   };
   const adapter = new SQLiteAdapter(adapterOptions);
   _db = new Database({ adapter, modelClasses: MODEL_CLASSES });
+}
+
+export function resetDatabase(): void {
+  _db = null;
 }
 
 export function getDb(): Database {

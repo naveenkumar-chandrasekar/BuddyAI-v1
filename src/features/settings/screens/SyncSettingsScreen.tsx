@@ -9,7 +9,11 @@ import {
   configureGoogleSignIn,
   type AppUser,
 } from '../../../data/firebase/FirebaseAuth';
-import { syncToFirebase, getLastSyncTime } from '../../../domain/usecases/sync/SyncUseCase';
+import {
+  syncToDrive,
+  restoreFromDriveBackup,
+  getLastSyncTime,
+} from '../../../domain/usecases/sync/SyncUseCase';
 
 function formatSyncTime(ts: number | null): string {
   if (ts === null) return 'Never';
@@ -19,6 +23,7 @@ function formatSyncTime(ts: number | null): string {
 export default function SyncSettingsScreen() {
   const [user, setUser] = useState<AppUser | null>(getCurrentUser());
   const [syncing, setSyncing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const [lastSync, setLastSync] = useState<number | null>(getLastSyncTime());
   const [status, setStatus] = useState<string>('');
 
@@ -47,21 +52,38 @@ export default function SyncSettingsScreen() {
   async function handleSync() {
     setSyncing(true);
     setStatus('');
-    const result = await syncToFirebase();
+    const result = await syncToDrive();
     setSyncing(false);
     if (result.success) {
       const ts = getLastSyncTime();
       setLastSync(ts);
-      setStatus('Sync complete');
+      setStatus('Backup complete');
     } else {
-      setStatus(`Sync failed: ${result.error ?? 'Unknown error'}`);
+      setStatus(`Backup failed: ${result.error ?? 'Unknown error'}`);
     }
   }
+
+  async function handleRestore() {
+    setRestoring(true);
+    setStatus('');
+    const result = await restoreFromDriveBackup();
+    setRestoring(false);
+    if (result.success) {
+      setStatus('Restore complete — restart the app to see your data');
+    } else {
+      setStatus(`Restore failed: ${result.error ?? 'Unknown error'}`);
+    }
+  }
+
+  const isSuccess = status.startsWith('Backup complete') || status.startsWith('Restore complete');
 
   return (
     <View style={styles.container}>
       <View style={styles.section}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>Firebase Backup</Text>
+        <Text variant="titleMedium" style={styles.sectionTitle}>Google Drive Backup</Text>
+        <Text variant="bodySmall" style={styles.description}>
+          Your data is backed up to your own Google Drive (private app folder). Only you can access it.
+        </Text>
         {user ? (
           <>
             <Text variant="bodyMedium" style={styles.email}>
@@ -81,9 +103,9 @@ export default function SyncSettingsScreen() {
       <Divider />
 
       <View style={styles.section}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>Sync</Text>
+        <Text variant="titleMedium" style={styles.sectionTitle}>Backup</Text>
         <Text variant="bodySmall" style={styles.lastSync}>
-          Last synced: {formatSyncTime(lastSync)}
+          Last backup: {formatSyncTime(lastSync)}
         </Text>
         {syncing ? (
           <ActivityIndicator style={styles.button} />
@@ -91,21 +113,43 @@ export default function SyncSettingsScreen() {
           <Button
             mode="contained"
             onPress={handleSync}
-            disabled={!user}
+            disabled={!user || restoring}
             style={styles.button}
           >
-            Sync Now
+            Backup Now
           </Button>
         )}
-        {status !== '' && (
-          <Text
-            variant="bodySmall"
-            style={status.startsWith('Sync complete') ? styles.success : styles.error}
+      </View>
+
+      <Divider />
+
+      <View style={styles.section}>
+        <Text variant="titleMedium" style={styles.sectionTitle}>Restore</Text>
+        <Text variant="bodySmall" style={styles.description}>
+          Restore data from your Drive backup. Use this when switching to a new device.
+        </Text>
+        {restoring ? (
+          <ActivityIndicator style={styles.button} />
+        ) : (
+          <Button
+            mode="outlined"
+            onPress={handleRestore}
+            disabled={!user || syncing}
+            style={styles.button}
           >
-            {status}
-          </Text>
+            Restore from Drive
+          </Button>
         )}
       </View>
+
+      {status !== '' && (
+        <Text
+          variant="bodySmall"
+          style={isSuccess ? styles.success : styles.error}
+        >
+          {status}
+        </Text>
+      )}
     </View>
   );
 }
@@ -113,7 +157,8 @@ export default function SyncSettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   section: { paddingVertical: 16 },
-  sectionTitle: { marginBottom: 12 },
+  sectionTitle: { marginBottom: 8 },
+  description: { opacity: 0.6, marginBottom: 8, lineHeight: 18 },
   email: { marginBottom: 8, opacity: 0.7 },
   button: { alignSelf: 'flex-start', marginTop: 8 },
   lastSync: { opacity: 0.6, marginBottom: 8 },
