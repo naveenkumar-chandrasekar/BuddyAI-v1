@@ -1,18 +1,21 @@
 import { initLlama } from 'llama.rn';
 import type { LlamaContext } from 'llama.rn';
+import { getSavedModelPath } from './ModelDownloadService';
 
-const MODEL_FILENAME = 'llama-3.2-3b-instruct-q4_k_m.gguf';
+const MODEL_FILENAME = 'llama-3.2-1b-instruct-q4_k_m.gguf';
 
 class LlamaService {
   private context: LlamaContext | null = null;
   private initializing = false;
 
-  async initialize(modelPath: string): Promise<void> {
+  async initialize(modelPath?: string): Promise<void> {
     if (this.context !== null || this.initializing) return;
+    const path = modelPath ?? getSavedModelPath();
+    if (!path) throw new Error('Model not downloaded. Path not found.');
     this.initializing = true;
     try {
       this.context = await initLlama({
-        model: modelPath,
+        model: path,
         n_ctx: 2048,
         use_mlock: true,
         n_threads: 4,

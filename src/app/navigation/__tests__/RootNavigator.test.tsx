@@ -12,6 +12,8 @@ jest.mock('../../../features/chat/store/chatStore', () => ({
   })),
 }));
 
+const mockRNFS = jest.requireMock('react-native-fs').default;
+
 function Wrapper({ children }: { children: React.ReactNode }) {
   return <NavigationContainer>{children}</NavigationContainer>;
 }
@@ -19,6 +21,7 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 describe('RootNavigator — onboarding gate', () => {
   beforeEach(() => {
     storage.clearAll();
+    mockRNFS.exists.mockResolvedValue(false);
   });
 
   it('shows onboarding when onboarding_done is not set', async () => {
@@ -32,8 +35,17 @@ describe('RootNavigator — onboarding gate', () => {
     expect(await screen.findByText('Get Started')).toBeTruthy();
   });
 
-  it('shows main app when onboarding_done is true', async () => {
+  it('shows model download when onboarding done but model missing', async () => {
     storage.set('onboarding_done', true);
+    mockRNFS.exists.mockResolvedValue(false);
+    render(<RootNavigator />, { wrapper: Wrapper });
+    expect(await screen.findByText('AI Model Required')).toBeTruthy();
+  });
+
+  it('shows main app when onboarding done and model exists', async () => {
+    storage.set('onboarding_done', true);
+    storage.set('model_path', '/mock/documents/models/llama-3.2-1b-instruct-q4_k_m.gguf');
+    mockRNFS.exists.mockResolvedValue(true);
     render(<RootNavigator />, { wrapper: Wrapper });
     expect(await screen.findByText('No chats yet. Tap + to start.')).toBeTruthy();
   });

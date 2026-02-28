@@ -7,6 +7,7 @@ import type { CompositeScreenProps } from '@react-navigation/native';
 
 export type RootStackParamList = {
   Onboarding: undefined;
+  ModelDownload: undefined;
   Main: undefined;
 };
 

@@ -175,6 +175,19 @@ jest.mock('@react-native-google-signin/google-signin', () => ({
   },
 }));
 
+jest.mock('react-native-fs', () => ({
+  __esModule: true,
+  default: {
+    DocumentDirectoryPath: '/mock/documents',
+    exists: jest.fn().mockResolvedValue(false),
+    mkdir: jest.fn().mockResolvedValue(undefined),
+    unlink: jest.fn().mockResolvedValue(undefined),
+    downloadFile: jest.fn(() => ({
+      promise: Promise.resolve({ statusCode: 200, bytesWritten: 0 }),
+    })),
+  },
+}));
+
 jest.mock('llama.rn', () => ({
   __esModule: true,
   initLlama: jest.fn().mockResolvedValue({
