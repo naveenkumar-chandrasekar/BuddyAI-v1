@@ -154,17 +154,6 @@ jest.mock('@react-native-firebase/auth', () => {
   return { __esModule: true, default: authFn };
 });
 
-jest.mock('@react-native-firebase/firestore', () => {
-  const batchMock = { set: jest.fn(), commit: jest.fn().mockResolvedValue(undefined) };
-  const docMock = { set: jest.fn().mockResolvedValue(undefined), get: jest.fn().mockResolvedValue({ exists: false, data: () => ({}) }) };
-  const snapshotMock = { empty: true, docs: [] };
-  const colMock = { doc: jest.fn(() => docMock), get: jest.fn().mockResolvedValue(snapshotMock) };
-  const firestoreInstance = {
-    batch: jest.fn(() => batchMock),
-    collection: jest.fn(() => ({ doc: jest.fn(() => ({ collection: jest.fn(() => colMock) })) })),
-  };
-  return { __esModule: true, default: jest.fn(() => firestoreInstance) };
-});
 
 jest.mock('@react-native-google-signin/google-signin', () => ({
   GoogleSignin: {
