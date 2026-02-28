@@ -7,7 +7,7 @@ export type AppUser = {
   displayName: string | null;
 };
 
-const WEB_CLIENT_ID = 'YOUR_WEB_CLIENT_ID';
+const WEB_CLIENT_ID = '995905981250-idl1t826qh68l7lkg3rdi7684b5p5tuo.apps.googleusercontent.com';
 
 export function configureGoogleSignIn(): void {
   GoogleSignin.configure({ webClientId: WEB_CLIENT_ID });
