@@ -10,6 +10,8 @@ export default class TodoModel extends Model {
   @field('person_id') personId!: string | null;
   @field('relation_type') relationType!: string | null;
   @field('due_date') dueDate!: number | null;
+  @field('is_recurring') isRecurring!: number;
+  @field('recurrence') recurrence!: string | null;
   @field('is_missed') isMissed!: number;
   @field('missed_at') missedAt!: number | null;
   @field('next_remind_at') nextRemindAt!: number | null;

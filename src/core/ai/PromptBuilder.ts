@@ -23,6 +23,7 @@ IMPORTANT rules for data fields:
 - To complete/delete a task: use "id" from that task's [id:...] in the tasks list.
 - To dismiss a missed item: use "id" and "type" (task/todo/reminder) from the missed items list.
 - Dates as Unix ms timestamps. "due_date" for tasks/todos, "remind_at" for reminders.
+- Recurring todos: set "is_recurring":true and "recurrence" string. Formats: "weekly:N" (N=0 Sun … 6 Sat), "monthly:D" (D=1-31 day of month), "monthly:first:N" (first weekday N), "monthly:last:N" (last weekday N).
 
 Valid intents and actions:
 PEOPLE_INTENT: CREATE_PERSON, UPDATE_PERSON, DELETE_PERSON, GET_PERSON, LIST_PEOPLE, ADD_BIRTHDAY

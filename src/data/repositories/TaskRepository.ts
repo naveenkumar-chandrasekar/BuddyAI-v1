@@ -44,6 +44,8 @@ function toTodo(m: TodoModel): Todo {
     personId: m.personId,
     relationType: m.relationType,
     dueDate: m.dueDate,
+    isRecurring: m.isRecurring === 1,
+    recurrence: m.recurrence,
     isMissed: m.isMissed === 1,
     missedAt: m.missedAt,
     nextRemindAt: m.nextRemindAt,
@@ -184,6 +186,8 @@ export class TodoRepository implements ITodoRepository {
         r.personId = input.personId ?? null;
         r.relationType = input.relationType ?? null;
         r.dueDate = input.dueDate ?? null;
+        r.isRecurring = input.isRecurring ? 1 : 0;
+        r.recurrence = input.recurrence ?? null;
         r.isMissed = 0;
         r.missedAt = null;
         r.nextRemindAt = null;
@@ -204,6 +208,8 @@ export class TodoRepository implements ITodoRepository {
         if (input.personId !== undefined) m.personId = input.personId ?? null;
         if (input.relationType !== undefined) m.relationType = input.relationType ?? null;
         if (input.dueDate !== undefined) m.dueDate = input.dueDate ?? null;
+        if (input.isRecurring !== undefined) m.isRecurring = input.isRecurring ? 1 : 0;
+        if (input.recurrence !== undefined) m.recurrence = input.recurrence ?? null;
         if (input.isMissed !== undefined) m.isMissed = input.isMissed ? 1 : 0;
         if (input.missedAt !== undefined) m.missedAt = input.missedAt ?? null;
         if (input.nextRemindAt !== undefined) m.nextRemindAt = input.nextRemindAt ?? null;

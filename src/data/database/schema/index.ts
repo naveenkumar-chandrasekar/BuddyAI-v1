@@ -13,7 +13,7 @@ import {
 import { notificationConfigSchema, birthdayRemindersSchema } from './notifSchema';
 
 export const schema = appSchema({
-  version: 1,
+  version: 2,
   tables: [
     placesSchema,
     peopleSchema,

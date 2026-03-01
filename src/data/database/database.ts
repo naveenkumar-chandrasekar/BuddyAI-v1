@@ -1,6 +1,7 @@
 import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 import { schema } from './schema';
+import { migrations } from './migrations';
 import PlaceModel from './models/PlaceModel';
 import PersonModel from './models/PersonModel';
 import TaskModel from './models/TaskModel';
@@ -42,6 +43,7 @@ export function initDatabase(encryptionKey: string, userId?: string): void {
   const dbName = userId ? `buddyai_${userId}` : 'buddyai';
   const adapterOptions: any = {
     schema,
+    migrations,
     dbName,
     jsi: true,
     encryptionKey: encryptionKey || undefined,

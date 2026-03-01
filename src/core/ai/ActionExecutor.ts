@@ -75,14 +75,18 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
         await deleteTask(String(d.id));
         return { success: true };
 
-      case 'CREATE_TODO':
+      case 'CREATE_TODO': {
+        const recurrence = d.recurrence ? String(d.recurrence) : undefined;
         await addTodo({
           title: String(d.title ?? ''),
           priority: toPriority(d.priority),
           dueDate: d.due_date ? Number(d.due_date) : undefined,
           personId: d.person_id ? String(d.person_id) : undefined,
+          isRecurring: Boolean(d.is_recurring),
+          recurrence,
         });
         return { success: true };
+      }
 
       case 'COMPLETE_TODO':
         if (!d.id) return { success: false, message: 'Todo ID required' };

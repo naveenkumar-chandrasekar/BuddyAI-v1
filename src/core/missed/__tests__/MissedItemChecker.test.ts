@@ -5,7 +5,7 @@ import { TaskStatus } from '../../../shared/constants/taskStatus';
 jest.mock('../../../data/repositories/TaskRepository', () => ({
   taskRepository: { getAll: jest.fn(), update: jest.fn() },
   todoRepository: { getAll: jest.fn(), update: jest.fn() },
-  reminderRepository: { getAll: jest.fn(), update: jest.fn() },
+  reminderRepository: { getAll: jest.fn(), update: jest.fn(), create: jest.fn() },
 }));
 
 jest.mock('../../../data/repositories/NotificationRepository', () => ({
@@ -52,6 +52,14 @@ const OVERDUE_REMINDER = {
   id: 'r1', title: 'Call dentist', description: null, remindAt: yesterday,
   isRecurring: false, recurrence: null, isDone: false,
   personId: null, relationType: null, priority: Priority.LOW,
+  isMissed: false, missedAt: null, nextRemindAt: null, remindCount: 0,
+  isDismissed: false, createdAt: 1000, updatedAt: 1000,
+};
+
+const OVERDUE_RECURRING_REMINDER = {
+  id: 'r2', title: 'Weekly standup', description: null, remindAt: yesterday,
+  isRecurring: true, recurrence: 'weekly:3', isDone: false,
+  personId: null, relationType: null, priority: Priority.HIGH,
   isMissed: false, missedAt: null, nextRemindAt: null, remindCount: 0,
   isDismissed: false, createdAt: 1000, updatedAt: 1000,
 };
@@ -144,6 +152,69 @@ describe('checkMissedItems', () => {
     expect(scheduleMissedItemNotification).toHaveBeenCalledWith(
       'reminder', 'r1', 'Call dentist', 1, expect.any(Number),
     );
+  });
+
+  it('recurring reminder: creates next occurrence and marks current done (not missed)', async () => {
+    taskRepository.getAll.mockResolvedValue([]);
+    todoRepository.getAll.mockResolvedValue([]);
+    reminderRepository.getAll.mockResolvedValue([OVERDUE_RECURRING_REMINDER]);
+    reminderRepository.create.mockResolvedValue({ ...OVERDUE_RECURRING_REMINDER, id: 'r3' });
+    reminderRepository.update.mockResolvedValue({ ...OVERDUE_RECURRING_REMINDER, isDone: true });
+
+    await checkMissedItems();
+
+    expect(reminderRepository.create).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Weekly standup',
+      isRecurring: true,
+      recurrence: 'weekly:3',
+    }));
+    expect(reminderRepository.update).toHaveBeenCalledWith('r2', { isDone: true });
+    expect(scheduleMissedItemNotification).not.toHaveBeenCalledWith(
+      'reminder', 'r2', expect.anything(), expect.anything(), expect.anything(),
+    );
+  });
+
+  it('recurring reminder: next remindAt is a future Wednesday from yesterday', async () => {
+    taskRepository.getAll.mockResolvedValue([]);
+    todoRepository.getAll.mockResolvedValue([]);
+    reminderRepository.getAll.mockResolvedValue([OVERDUE_RECURRING_REMINDER]);
+    reminderRepository.update.mockResolvedValue({});
+
+    let createdRemindAt: number | undefined;
+    reminderRepository.create.mockImplementation(async (input: { remindAt: number }) => {
+      createdRemindAt = input.remindAt;
+      return { ...OVERDUE_RECURRING_REMINDER, id: 'r3', remindAt: input.remindAt };
+    });
+
+    await checkMissedItems();
+
+    expect(createdRemindAt).toBeDefined();
+    const nextDate = new Date(createdRemindAt!);
+    expect(nextDate.getDay()).toBe(3); // Wednesday
+    expect(nextDate.getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it('non-recurring reminder is still marked as missed', async () => {
+    taskRepository.getAll.mockResolvedValue([]);
+    todoRepository.getAll.mockResolvedValue([]);
+    reminderRepository.getAll.mockResolvedValue([OVERDUE_REMINDER]);
+    reminderRepository.update.mockResolvedValue({ ...OVERDUE_REMINDER, isMissed: true });
+
+    await checkMissedItems();
+
+    expect(reminderRepository.update).toHaveBeenCalledWith('r1', expect.objectContaining({ isMissed: true }));
+    expect(reminderRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('dismissed recurring reminder is skipped entirely', async () => {
+    taskRepository.getAll.mockResolvedValue([]);
+    todoRepository.getAll.mockResolvedValue([]);
+    reminderRepository.getAll.mockResolvedValue([{ ...OVERDUE_RECURRING_REMINDER, isDismissed: true }]);
+
+    await checkMissedItems();
+
+    expect(reminderRepository.create).not.toHaveBeenCalled();
+    expect(reminderRepository.update).not.toHaveBeenCalled();
   });
 
   it('uses correct interval for high priority (1 day)', async () => {

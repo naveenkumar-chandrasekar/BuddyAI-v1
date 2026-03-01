@@ -4,6 +4,7 @@ import { scheduleMissedItemNotification } from '../notifications/NotifeeService'
 import { TaskStatus } from '../../shared/constants/taskStatus';
 import { Priority } from '../../shared/constants/priority';
 import { DEFAULT_NOTIFICATION_CONFIG } from '../../domain/models/Notification';
+import { computeNextDueDate } from '../utils/recurrence';
 import type { Task, Todo, Reminder } from '../../domain/models/Task';
 
 const DAY_MS = 86400000;
@@ -101,7 +102,7 @@ export async function checkMissedItems(): Promise<void> {
       (t.nextRemindAt === null || t.nextRemindAt <= now),
   );
 
-  const missedReminders = allReminders.filter(
+  const allMissedReminders = allReminders.filter(
     r =>
       r.remindAt < now &&
       !r.isDone &&
@@ -109,9 +110,26 @@ export async function checkMissedItems(): Promise<void> {
       (r.nextRemindAt === null || r.nextRemindAt <= now),
   );
 
+  const recurringReminders = allMissedReminders.filter(r => r.isRecurring && r.recurrence);
+  const missedReminders = allMissedReminders.filter(r => !r.isRecurring || !r.recurrence);
+
   await Promise.all([
     ...missedTasks.map(t => processMissedTask(t, missedIntervalMs(t.priority, config))),
     ...missedTodos.map(t => processMissedTodo(t, missedIntervalMs(t.priority, config))),
     ...missedReminders.map(r => processMissedReminder(r, missedIntervalMs(r.priority, config))),
+    ...recurringReminders.map(async r => {
+      const nextRemindAt = computeNextDueDate(r.recurrence!, new Date(r.remindAt));
+      await reminderRepository.create({
+        title: r.title,
+        description: r.description ?? undefined,
+        remindAt: nextRemindAt,
+        isRecurring: true,
+        recurrence: r.recurrence!,
+        personId: r.personId ?? undefined,
+        relationType: r.relationType ?? undefined,
+        priority: r.priority,
+      });
+      await reminderRepository.update(r.id, { isDone: true });
+    }),
   ]);
 }

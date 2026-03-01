@@ -71,8 +71,13 @@ export const useTaskStore = create<TaskState>((set, _get) => ({
   },
 
   async toggleTodo(id) {
-    const updated = await toggleTodo(id);
-    set(s => ({ todos: s.todos.map(t => (t.id === id ? updated : t)) }));
+    const { todo, next } = await toggleTodo(id);
+    set(s => {
+      if (next) {
+        return { todos: [next, ...s.todos.filter(t => t.id !== id)] };
+      }
+      return { todos: s.todos.map(t => (t.id === id ? todo : t)) };
+    });
   },
 
   async deleteTodo(id) {

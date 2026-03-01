@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { TasksStackParamList } from '../../../app/navigation/types';
 import { useTaskStore } from '../store/taskStore';
 import { PRIORITY_LABELS } from '../../../shared/constants/priority';
+import { describeRecurrence } from '../../../core/utils/recurrence';
 import type { Todo } from '../../../domain/models/Task';
 
 type Row =
@@ -64,7 +65,7 @@ export default function TodosListScreen() {
             return (
               <List.Item
                 title={todo.title}
-                description={PRIORITY_LABELS[todo.priority]}
+                description={todo.isRecurring && todo.recurrence ? PRIORITY_LABELS[todo.priority] + ' · ' + describeRecurrence(todo.recurrence) : PRIORITY_LABELS[todo.priority]}
                 titleStyle={[
                   todo.isCompleted ? styles.done : undefined,
                   todo.isMissed ? styles.missedText : undefined,

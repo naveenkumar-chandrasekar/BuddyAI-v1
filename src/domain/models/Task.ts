@@ -48,6 +48,8 @@ export interface Todo {
   personId: string | null;
   relationType: string | null;
   dueDate: number | null;
+  isRecurring: boolean;
+  recurrence: string | null;
   isMissed: boolean;
   missedAt: number | null;
   nextRemindAt: number | null;
@@ -64,6 +66,8 @@ export interface CreateTodoInput {
   personId?: string;
   relationType?: string;
   dueDate?: number;
+  isRecurring?: boolean;
+  recurrence?: string;
 }
 
 export type UpdateTodoInput = Partial<CreateTodoInput> & {

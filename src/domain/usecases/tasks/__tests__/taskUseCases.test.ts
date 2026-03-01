@@ -22,8 +22,9 @@ const MOCK_TASK = {
 
 const MOCK_TODO = {
   id: 'td1', title: 'Read book', isCompleted: false, priority: Priority.LOW,
-  personId: null, relationType: null, dueDate: null, isMissed: false,
-  remindCount: 0, isDismissed: false, createdAt: 1000, updatedAt: 1000, completedAt: null,
+  personId: null, relationType: null, dueDate: null, isRecurring: false, recurrence: null,
+  isMissed: false, missedAt: null, nextRemindAt: null, remindCount: 0,
+  isDismissed: false, createdAt: 1000, updatedAt: 1000, completedAt: null,
 };
 
 const MOCK_REMINDER = {
@@ -88,6 +89,21 @@ describe('AddTaskUseCase', () => {
 
   it('throws when remindAt is 0', async () => {
     await expect(addReminder({ title: 'Test', remindAt: 0, priority: Priority.HIGH })).rejects.toThrow('Remind time is required');
+  });
+
+  it('creates a recurring todo with recurrence fields', async () => {
+    const recurringTodo = { ...MOCK_TODO, isRecurring: true, recurrence: 'weekly:0', dueDate: Date.now() + 86400000 };
+    todoRepository.create.mockResolvedValue(recurringTodo);
+    const result = await addTodo({ title: 'Read book', priority: Priority.LOW, isRecurring: true, recurrence: 'weekly:0', dueDate: Date.now() + 86400000 });
+    expect(todoRepository.create).toHaveBeenCalledWith(expect.objectContaining({ isRecurring: true, recurrence: 'weekly:0' }));
+    expect(result.isRecurring).toBe(true);
+    expect(result.recurrence).toBe('weekly:0');
+  });
+
+  it('creates a non-recurring todo without recurrence', async () => {
+    todoRepository.create.mockResolvedValue(MOCK_TODO);
+    await addTodo({ title: 'Read book', priority: Priority.LOW });
+    expect(todoRepository.create).toHaveBeenCalledWith(expect.not.objectContaining({ isRecurring: true }));
   });
 });
 

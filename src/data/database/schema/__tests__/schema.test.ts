@@ -26,7 +26,7 @@ describe('Database Schema', () => {
   });
 
   it('has schema version 1', () => {
-    expect(schema.version).toBe(1);
+    expect(schema.version).toBe(2);
   });
 
   it.each(EXPECTED_TABLES)('includes table: %s', tableName => {

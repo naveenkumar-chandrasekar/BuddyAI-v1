@@ -33,6 +33,8 @@ export const todosSchema = tableSchema({
     { name: 'person_id', type: 'string', isOptional: true },
     { name: 'relation_type', type: 'string', isOptional: true },
     { name: 'due_date', type: 'number', isOptional: true },
+    { name: 'is_recurring', type: 'number' },
+    { name: 'recurrence', type: 'string', isOptional: true },
     { name: 'is_missed', type: 'number' },
     { name: 'missed_at', type: 'number', isOptional: true },
     { name: 'next_remind_at', type: 'number', isOptional: true },

@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Alert } from 'react-native';
-import { Button, Text, TextInput, SegmentedButtons } from 'react-native-paper';
+import { ScrollView, StyleSheet, Alert, View } from 'react-native';
+import { Button, Text, TextInput, SegmentedButtons, Chip } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { TasksStackParamList } from '../../../app/navigation/types';
 import { useTaskStore } from '../store/taskStore';
 import { Priority, PRIORITY_LABELS } from '../../../shared/constants/priority';
 import { TaskItemType } from '../../../shared/constants/taskStatus';
+import { WEEKDAY_LABELS, computeFirstDueDate, describeRecurrence } from '../../../core/utils/recurrence';
 import type { PriorityValue } from '../../../shared/constants/priority';
 import type { TaskItemTypeValue } from '../../../shared/constants/taskStatus';
 
 type Props = NativeStackScreenProps<TasksStackParamList, 'AddEditTask'>;
+type RecurrenceType = 'none' | 'weekly' | 'monthly';
+type MonthlyType = 'date' | 'first' | 'last';
 
 const TYPE_LABELS: Record<TaskItemTypeValue, string> = {
   task: 'Task',
@@ -24,8 +27,14 @@ export default function AddEditTaskScreen({ navigation, route }: Props) {
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<PriorityValue>(Priority.MEDIUM);
   const [remindAt, setRemindAt] = useState('');
-  const [saving, setSaving] = useState(false);
 
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('none');
+  const [weeklyDay, setWeeklyDay] = useState(0);
+  const [monthlyType, setMonthlyType] = useState<MonthlyType>('date');
+  const [monthlyDate, setMonthlyDate] = useState('1');
+  const [monthlyWeekday, setMonthlyWeekday] = useState(1);
+
+  const [saving, setSaving] = useState(false);
   const { addTask, addTodo, addReminder } = useTaskStore();
 
   const priorityButtons = [
@@ -39,6 +48,14 @@ export default function AddEditTaskScreen({ navigation, route }: Props) {
     label: TYPE_LABELS[t],
   }));
 
+  function buildRecurrence(): string | undefined {
+    if (recurrenceType === 'none') return undefined;
+    if (recurrenceType === 'weekly') return `weekly:${weeklyDay}`;
+    const day = Math.max(1, Math.min(31, Number(monthlyDate) || 1));
+    if (monthlyType === 'date') return `monthly:${day}`;
+    return `monthly:${monthlyType}:${monthlyWeekday}`;
+  }
+
   async function handleSave() {
     if (!title.trim()) { Alert.alert('Title is required'); return; }
     setSaving(true);
@@ -46,7 +63,9 @@ export default function AddEditTaskScreen({ navigation, route }: Props) {
       if (type === TaskItemType.TASK) {
         await addTask({ title: title.trim(), description: description || undefined, priority });
       } else if (type === TaskItemType.TODO) {
-        await addTodo({ title: title.trim(), priority });
+        const recurrence = buildRecurrence();
+        const dueDate = recurrence ? computeFirstDueDate(recurrence) : undefined;
+        await addTodo({ title: title.trim(), priority, isRecurring: !!recurrence, recurrence, dueDate });
       } else {
         const ts = remindAt ? new Date(remindAt).getTime() : Date.now() + 3600000;
         if (isNaN(ts)) { Alert.alert('Invalid date/time'); setSaving(false); return; }
@@ -59,6 +78,8 @@ export default function AddEditTaskScreen({ navigation, route }: Props) {
       setSaving(false);
     }
   }
+
+  const recurrencePreview = buildRecurrence();
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
@@ -89,6 +110,83 @@ export default function AddEditTaskScreen({ navigation, route }: Props) {
         </>
       )}
 
+      {type === TaskItemType.TODO && (
+        <>
+          <Text variant="titleMedium" style={styles.section}>Repeat</Text>
+          <SegmentedButtons
+            value={recurrenceType}
+            onValueChange={v => setRecurrenceType(v as RecurrenceType)}
+            buttons={[
+              { value: 'none', label: 'None' },
+              { value: 'weekly', label: 'Weekly' },
+              { value: 'monthly', label: 'Monthly' },
+            ]}
+            style={styles.segmented}
+          />
+
+          {recurrenceType === 'weekly' && (
+            <View style={styles.chipRow}>
+              {WEEKDAY_LABELS.map((label, i) => (
+                <Chip
+                  key={i}
+                  selected={weeklyDay === i}
+                  onPress={() => setWeeklyDay(i)}
+                  style={styles.dayChip}
+                  compact
+                >
+                  {label}
+                </Chip>
+              ))}
+            </View>
+          )}
+
+          {recurrenceType === 'monthly' && (
+            <>
+              <SegmentedButtons
+                value={monthlyType}
+                onValueChange={v => setMonthlyType(v as MonthlyType)}
+                buttons={[
+                  { value: 'date', label: 'On date' },
+                  { value: 'first', label: 'First' },
+                  { value: 'last', label: 'Last' },
+                ]}
+                style={styles.segmented}
+              />
+              {monthlyType === 'date' ? (
+                <TextInput
+                  label="Day of month (1–31)"
+                  value={monthlyDate}
+                  onChangeText={v => setMonthlyDate(v.replace(/[^0-9]/g, ''))}
+                  keyboardType="numeric"
+                  mode="outlined"
+                  style={styles.input}
+                />
+              ) : (
+                <View style={styles.chipRow}>
+                  {WEEKDAY_LABELS.map((label, i) => (
+                    <Chip
+                      key={i}
+                      selected={monthlyWeekday === i}
+                      onPress={() => setMonthlyWeekday(i)}
+                      style={styles.dayChip}
+                      compact
+                    >
+                      {label}
+                    </Chip>
+                  ))}
+                </View>
+              )}
+            </>
+          )}
+
+          {recurrencePreview && (
+            <Text variant="bodySmall" style={styles.recurrenceHint}>
+              ↻ {describeRecurrence(recurrencePreview)}
+            </Text>
+          )}
+        </>
+      )}
+
       <Text variant="titleMedium" style={styles.section}>Priority</Text>
       <SegmentedButtons
         value={String(priority)}
@@ -109,5 +207,8 @@ const styles = StyleSheet.create({
   section: { marginTop: 20, marginBottom: 8 },
   input: { marginBottom: 8 },
   segmented: { marginBottom: 8 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
+  dayChip: { marginBottom: 4 },
+  recurrenceHint: { opacity: 0.6, marginBottom: 4, color: '#5B3EBF' },
   save: { marginTop: 24, marginBottom: 40 },
 });
