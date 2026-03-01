@@ -17,7 +17,7 @@ class LlamaService {
 
     this.initPromise = initLlama({
       model: path,
-      n_ctx: 2048,
+      n_ctx: 4096,
       use_mlock: true,
       n_threads: 4,
     }).then(ctx => {
@@ -37,10 +37,10 @@ class LlamaService {
     }
     const result = await this.context.completion({
       prompt,
-      n_predict: 512,
-      temperature: 0.7,
+      n_predict: 256,
+      temperature: 0.1,
       top_p: 0.9,
-      stop: ['</s>', '<|end|>', '[INST]', '\n\n\n'],
+      stop: ['</s>', '<|end|>', '[INST]', '\n\n\n', '<|eot_id|>', '<|end_of_text|>'],
     });
     return result.text.trim();
   }
