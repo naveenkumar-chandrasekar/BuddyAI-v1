@@ -138,13 +138,12 @@ Birthdays: ${birthdaysSummary}${chatHistory ? `\nHistory:\n${chatHistory}` : ''}
 
 User: ${userMessage}`;
 
-  return `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-${SYSTEM_PROMPT}<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-${context}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
-`;
+  return `<|im_start|>system
+${SYSTEM_PROMPT}<|im_end|>
+<|im_start|>user
+${context}<|im_end|>
+<|im_start|>assistant
+{"intent":"`;
 }
 
 export async function buildDailySummaryPrompt(): Promise<string> {

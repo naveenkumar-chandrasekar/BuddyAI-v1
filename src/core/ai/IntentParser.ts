@@ -8,7 +8,9 @@ const FALLBACK_INTENT: ChatIntent = {
 };
 
 export function parseIntent(rawResponse: string): ChatIntent {
-  const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+  const text = rawResponse.trim();
+  const fullText = text.startsWith('{') ? text : `{"intent":"${text}`;
+  const jsonMatch = fullText.match(/\{[\s\S]*\}/);
   if (!jsonMatch) return FALLBACK_INTENT;
 
   try {

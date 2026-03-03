@@ -2,7 +2,7 @@ import { initLlama } from 'llama.rn';
 import type { LlamaContext } from 'llama.rn';
 import { getSavedModelPath } from './ModelDownloadService';
 
-const MODEL_FILENAME = 'llama-3.2-1b-instruct-q4_k_m.gguf';
+const MODEL_FILENAME = 'qwen2.5-0.5b-instruct-q8_0.gguf';
 
 class LlamaService {
   private context: LlamaContext | null = null;
@@ -37,10 +37,10 @@ class LlamaService {
     }
     const result = await this.context.completion({
       prompt,
-      n_predict: 256,
+      n_predict: 128,
       temperature: 0.1,
       top_p: 0.9,
-      stop: ['</s>', '<|end|>', '[INST]', '\n\n\n', '<|eot_id|>', '<|end_of_text|>'],
+      stop: ['<|im_end|>', '<|endoftext|>', '\n\n\n'],
     });
     return result.text.trim();
   }
