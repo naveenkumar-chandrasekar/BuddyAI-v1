@@ -56,9 +56,10 @@ const OVERDUE_REMINDER = {
   isDismissed: false, createdAt: 1000, updatedAt: 1000,
 };
 
+const recurringTargetDay = (new Date().getDay() + 3) % 7;
 const OVERDUE_RECURRING_REMINDER = {
   id: 'r2', title: 'Weekly standup', description: null, remindAt: yesterday,
-  isRecurring: true, recurrence: 'weekly:3', isDone: false,
+  isRecurring: true, recurrence: `weekly:${recurringTargetDay}`, isDone: false,
   personId: null, relationType: null, priority: Priority.HIGH,
   isMissed: false, missedAt: null, nextRemindAt: null, remindCount: 0,
   isDismissed: false, createdAt: 1000, updatedAt: 1000,
@@ -166,7 +167,7 @@ describe('checkMissedItems', () => {
     expect(reminderRepository.create).toHaveBeenCalledWith(expect.objectContaining({
       title: 'Weekly standup',
       isRecurring: true,
-      recurrence: 'weekly:3',
+      recurrence: `weekly:${recurringTargetDay}`,
     }));
     expect(reminderRepository.update).toHaveBeenCalledWith('r2', { isDone: true });
     expect(scheduleMissedItemNotification).not.toHaveBeenCalledWith(
@@ -174,7 +175,7 @@ describe('checkMissedItems', () => {
     );
   });
 
-  it('recurring reminder: next remindAt is a future Wednesday from yesterday', async () => {
+  it('recurring reminder: next remindAt is a future weekday from yesterday', async () => {
     taskRepository.getAll.mockResolvedValue([]);
     todoRepository.getAll.mockResolvedValue([]);
     reminderRepository.getAll.mockResolvedValue([OVERDUE_RECURRING_REMINDER]);
@@ -190,7 +191,7 @@ describe('checkMissedItems', () => {
 
     expect(createdRemindAt).toBeDefined();
     const nextDate = new Date(createdRemindAt!);
-    expect(nextDate.getDay()).toBe(3); // Wednesday
+    expect(nextDate.getDay()).toBe(recurringTargetDay);
     expect(nextDate.getTime()).toBeGreaterThan(Date.now());
   });
 

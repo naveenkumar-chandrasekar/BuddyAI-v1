@@ -37,18 +37,18 @@ export default function ModelDownloadScreen({ navigation }: Props) {
           AI Model Required
         </Text>
         <Text variant="bodyMedium" style={styles.body}>
-          BuddyAI uses Llama 3.2 1B running entirely on your device. No data ever leaves your
+          BuddyAI uses Qwen2.5 0.5B running entirely on your device. No data ever leaves your
           phone.
         </Text>
         <Text variant="bodySmall" style={styles.size}>
-          Download size: ~800 MB — connect to Wi-Fi recommended
+          Download size: ~400 MB — connect to Wi-Fi recommended
         </Text>
 
         {status === 'downloading' && (
           <View style={styles.progress}>
             <ProgressBar progress={percent / 100} style={styles.bar} />
             <Text variant="bodySmall" style={styles.progressText}>
-              {percent}% — {formatBytes(written)} / {total > 0 ? formatBytes(total) : '~800 MB'}
+              {percent}% — {formatBytes(written)} / {total > 0 ? formatBytes(total) : '~400 MB'}
             </Text>
           </View>
         )}
