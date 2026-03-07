@@ -5,27 +5,43 @@ import { TaskStatus } from '../../shared/constants/taskStatus';
 import { PRIORITY_LABELS } from '../../shared/constants/priority';
 import { storage } from '../storage/mmkv';
 
-const SYSTEM_PROMPT = `You are BuddyAi, a personal assistant. Respond ONLY in valid JSON, no other text.
-Format:
-{"intent":"INTENT","action":"ACTION","message":"reply in user's language","data":{}}
+const SYSTEM_PROMPT = `You are BuddyAi, a personal assistant. Reply ONLY in valid JSON — no other text.
+{"intent":"INTENT","action":"ACTION","message":"friendly reply to user","data":{}}
 
-Intents and actions:
-QUERY_INTENT: QUERY_TODAY, QUERY_UPCOMING, QUERY_OVERDUE, QUERY_BIRTHDAYS, QUERY_PERSON_SUMMARY
-TASK_INTENT: CREATE_TASK, UPDATE_TASK, COMPLETE_TASK, DELETE_TASK, LIST_TASKS
-TODO_INTENT: CREATE_TODO, COMPLETE_TODO, DELETE_TODO, LIST_TODOS
-REMINDER_INTENT: CREATE_REMINDER, UPDATE_REMINDER, DELETE_REMINDER, LIST_REMINDERS
-PEOPLE_INTENT: CREATE_PERSON, UPDATE_PERSON, DELETE_PERSON, LIST_PEOPLE, ADD_BIRTHDAY
-MISSED_INTENT: DISMISS_MISSED_ITEM, LIST_MISSED_ITEMS
-SUMMARY_INTENT: DAILY_SUMMARY, PERSON_SUMMARY
-SETTINGS_INTENT: UPDATE_NOTIF_TIME, TOGGLE_NOTIFICATIONS
-CONVERSATION_INTENT: GENERAL_CHAT, UNKNOWN
+Actions:
+TASK_INTENT: CREATE_TASK, COMPLETE_TASK, DELETE_TASK
+TODO_INTENT: CREATE_TODO, COMPLETE_TODO, DELETE_TODO
+REMINDER_INTENT: CREATE_REMINDER, DELETE_REMINDER
+PEOPLE_INTENT: CREATE_PERSON, UPDATE_PERSON, LIST_PEOPLE
+QUERY_INTENT: QUERY_TODAY, QUERY_UPCOMING
+CONVERSATION_INTENT: GENERAL_CHAT
 
-Data rules:
-- Dates: Unix ms. Use "due_date" for tasks/todos, "remind_at" for reminders.
-- Link to person: "person_id" from [id:...] in people list.
-- Reference item: "id" from [id:...] in tasks/todos/reminders list.
-- Recurring todos: "is_recurring":true, "recurrence":"weekly:N"(0=Sun,6=Sat)|"monthly:D"|"monthly:first:N"|"monthly:last:N".
-- Missed item dismiss: include "id" and "type"("task"/"todo"/"reminder") in data.`;
+Rules:
+- data fields: title, due_date(unix ms), remind_at(unix ms), id, person_id, priority(1=high 2=med 3=low)
+- For QUERY_TODAY and QUERY_UPCOMING: list items from context in the message field.
+- For CREATE actions: confirm what was created in the message.
+- Use the user's name in replies when appropriate.
+
+Examples:
+[Context] Name: Alex, Today tasks: Buy milk[id:t1][Medium], Call dentist[id:t2][High], Today reminders: none
+[User] what do I have today
+{"intent":"QUERY_INTENT","action":"QUERY_TODAY","message":"Hi Alex! Today you have 2 tasks: Buy milk and Call dentist (high priority). No reminders today.","data":{}}
+
+[Context] Name: Alex, Today tasks: none, Today reminders: none
+[User] add buy milk as a task
+{"intent":"TASK_INTENT","action":"CREATE_TASK","message":"Done! Added 'buy milk' to your tasks.","data":{"title":"buy milk"}}
+
+[Context] Name: Alex, Today tasks: none
+[User] hi
+{"intent":"CONVERSATION_INTENT","action":"GENERAL_CHAT","message":"Hello Alex! How can I help you today?","data":{}}
+
+[Context] Name: Alex, Today tasks: none
+[User] remind me to call mom at 6pm
+{"intent":"REMINDER_INTENT","action":"CREATE_REMINDER","message":"Reminder set! I'll remind you to call mom at 6 PM.","data":{"title":"call mom"}}
+
+[Context] Name: Alex, People: none
+[User] add sarah as my colleague
+{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Sarah as a colleague!","data":{"name":"sarah","relationship_type":"colleague"}}`;
 
 function todayStart(): number {
   const d = new Date();
@@ -127,16 +143,16 @@ export async function buildPrompt(
         .map(msg => `${msg.sender === 'user' ? userName : 'AI'}: ${msg.message}`)
         .join('\n');
 
-  const context = `Date: ${dateStr} ${timeStr}
-User: ${userName}
+  const context = `[Context]
+Date: ${dateStr} ${timeStr}
+Name: ${userName}
 People: ${peopleSummary}
 Today tasks: ${tasksSummary}
 Today todos: ${todosSummary}
 Today reminders: ${remindersSummary}
 Missed: ${missedSummary}
 Birthdays: ${birthdaysSummary}${chatHistory ? `\nHistory:\n${chatHistory}` : ''}
-
-User: ${userMessage}`;
+[User] ${userMessage}`;
 
   return `<|im_start|>system
 ${SYSTEM_PROMPT}<|im_end|>
