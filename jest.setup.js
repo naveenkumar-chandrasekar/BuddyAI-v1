@@ -177,6 +177,11 @@ jest.mock('react-native-fs', () => ({
   },
 }));
 
+jest.mock('@react-native-community/datetimepicker', () => {
+  const React = require('react');
+  return { __esModule: true, default: () => React.createElement('DateTimePicker') };
+});
+
 jest.mock('llama.rn', () => ({
   __esModule: true,
   initLlama: jest.fn().mockResolvedValue({

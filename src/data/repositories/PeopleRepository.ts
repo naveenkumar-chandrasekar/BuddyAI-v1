@@ -1,10 +1,22 @@
 import { Q } from '@nozbe/watermelondb';
 import { getDb } from '../database/database';
 import PersonModel from '../database/models/PersonModel';
+import PersonConnectionModel from '../database/models/PersonConnectionModel';
 import type { IPeopleRepository } from '../../domain/repositories/IPeopleRepository';
 import type { Person, CreatePersonInput, UpdatePersonInput } from '../../domain/models/Person';
+import type { PersonConnection, CreatePersonConnectionInput } from '../../domain/models/PersonConnection';
 import type { PriorityValue } from '../../shared/constants/priority';
 import type { RelationshipTypeValue } from '../../shared/constants/relationships';
+
+function toConnection(m: PersonConnectionModel): PersonConnection {
+  return {
+    id: m.id,
+    personId: m.personId,
+    relatedPersonId: m.relatedPersonId,
+    label: m.label,
+    createdAt: m.createdAt.getTime(),
+  };
+}
 
 function toPerson(m: PersonModel): Person {
   return {
@@ -24,6 +36,7 @@ function toPerson(m: PersonModel): Person {
 
 export class PeopleRepository implements IPeopleRepository {
   private get collection() { return getDb().collections.get<PersonModel>('people'); }
+  private get connCollection() { return getDb().collections.get<PersonConnectionModel>('person_connections'); }
 
   async getAll(): Promise<Person[]> {
     const records = await this.collection
@@ -92,9 +105,33 @@ export class PeopleRepository implements IPeopleRepository {
   async remove(id: string): Promise<void> {
     await getDb().write(async () => {
       const record = await this.collection.find(id);
-      await record.update(r => {
-        r.isDeleted = 1;
-      });
+      await record.update(r => { r.isDeleted = 1; });
+    });
+  }
+
+  async getConnectionsForPerson(personId: string): Promise<PersonConnection[]> {
+    const records = await this.connCollection
+      .query(Q.where('is_deleted', 0), Q.or(Q.where('person_id', personId), Q.where('related_person_id', personId)))
+      .fetch();
+    return records.map(toConnection);
+  }
+
+  async addConnection(input: CreatePersonConnectionInput): Promise<PersonConnection> {
+    const record = await getDb().write(async () =>
+      this.connCollection.create(r => {
+        r.personId = input.personId;
+        r.relatedPersonId = input.relatedPersonId;
+        r.label = input.label;
+        r.isDeleted = 0;
+      }),
+    );
+    return toConnection(record);
+  }
+
+  async removeConnection(id: string): Promise<void> {
+    await getDb().write(async () => {
+      const record = await this.connCollection.find(id);
+      await record.update(r => { r.isDeleted = 1; });
     });
   }
 }

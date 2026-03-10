@@ -25,6 +25,16 @@ jest.mock('../../../../core/ai/ActionExecutor', () => ({
   executeAction: jest.fn().mockResolvedValue({ success: true }),
 }));
 
+jest.mock('../../../../core/ai/KeywordClassifier', () => ({
+  classifyByKeyword: jest.fn().mockReturnValue(null),
+}));
+
+jest.mock('../../../../core/ai/QueryResponseBuilder', () => ({
+  buildQueryTodayMessage: jest.fn().mockResolvedValue('Here is your day!'),
+  buildQueryUpcomingMessage: jest.fn().mockResolvedValue('Here is upcoming!'),
+  buildBirthdayMessage: jest.fn().mockResolvedValue('Birthdays!'),
+}));
+
 const { chatMessageRepository } = jest.requireMock('../../../../data/repositories/ChatRepository');
 const llamaMod = jest.requireMock('../../../../core/ai/LlamaService');
 const { parseIntent, isConversationalOnly } = jest.requireMock('../../../../core/ai/IntentParser');

@@ -7,6 +7,7 @@ const getTable = (name: string) => schema.tables[name as keyof typeof schema.tab
 const EXPECTED_TABLES = [
   'places',
   'people',
+  'person_connections',
   'tasks',
   'todos',
   'reminders',
@@ -21,12 +22,12 @@ const EXPECTED_TABLES = [
 ];
 
 describe('Database Schema', () => {
-  it('defines exactly 13 tables', () => {
-    expect(tableNames).toHaveLength(13);
+  it('defines exactly 14 tables', () => {
+    expect(tableNames).toHaveLength(14);
   });
 
-  it('has schema version 1', () => {
-    expect(schema.version).toBe(2);
+  it('has schema version 3', () => {
+    expect(schema.version).toBe(3);
   });
 
   it.each(EXPECTED_TABLES)('includes table: %s', tableName => {

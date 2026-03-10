@@ -61,12 +61,31 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const { activeSession, messages } = get();
     if (!activeSession || !text.trim()) return;
 
-    set({ sending: true, error: null });
+    const optimisticUserMsg: ChatMessage = {
+      id: `optimistic-${Date.now()}`,
+      sessionId: activeSession.id,
+      sender: 'user',
+      message: text.trim(),
+      messageType: 'text',
+      actionType: null,
+      actionPayload: null,
+      isProcessed: false,
+      createdAt: Date.now(),
+    };
+
+    set({ sending: true, error: null, messages: [...messages, optimisticUserMsg] });
     try {
       const { userMessage, aiMessage } = await sendMessage(activeSession.id, text.trim());
-      set({ messages: [...messages, userMessage, aiMessage], sending: false });
+      set(state => ({
+        messages: [...state.messages.filter(m => m.id !== optimisticUserMsg.id), userMessage, aiMessage],
+        sending: false,
+      }));
     } catch (e) {
-      set({ sending: false, error: String(e) });
+      set(state => ({
+        messages: state.messages.filter(m => m.id !== optimisticUserMsg.id),
+        sending: false,
+        error: String(e),
+      }));
     }
   },
 }));

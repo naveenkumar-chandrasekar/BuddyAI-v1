@@ -5,43 +5,36 @@ import { TaskStatus } from '../../shared/constants/taskStatus';
 import { PRIORITY_LABELS } from '../../shared/constants/priority';
 import { storage } from '../storage/mmkv';
 
-const SYSTEM_PROMPT = `You are BuddyAi, a personal assistant. Reply ONLY in valid JSON — no other text.
-{"intent":"INTENT","action":"ACTION","message":"friendly reply to user","data":{}}
+const SYSTEM_PROMPT = `You are BuddyAi. Reply ONLY in valid JSON, no other text.
+{"intent":"INTENT","action":"ACTION","message":"short friendly reply","data":{}}
 
 Actions:
 TASK_INTENT: CREATE_TASK, COMPLETE_TASK, DELETE_TASK
 TODO_INTENT: CREATE_TODO, COMPLETE_TODO, DELETE_TODO
 REMINDER_INTENT: CREATE_REMINDER, DELETE_REMINDER
 PEOPLE_INTENT: CREATE_PERSON, UPDATE_PERSON, LIST_PEOPLE
-QUERY_INTENT: QUERY_TODAY, QUERY_UPCOMING
+QUERY_INTENT: QUERY_TODAY, QUERY_UPCOMING, QUERY_BIRTHDAYS
 CONVERSATION_INTENT: GENERAL_CHAT
 
-Rules:
-- data fields: title, due_date(unix ms), remind_at(unix ms), id, person_id, priority(1=high 2=med 3=low)
-- For QUERY_TODAY and QUERY_UPCOMING: list items from context in the message field.
-- For CREATE actions: confirm what was created in the message.
-- Use the user's name in replies when appropriate.
+data fields: title, due_date(unix ms), remind_at(unix ms), id, person_id, priority(1=high 2=med 3=low)
 
 Examples:
-[Context] Name: Alex, Today tasks: Buy milk[id:t1][Medium], Call dentist[id:t2][High], Today reminders: none
 [User] what do I have today
-{"intent":"QUERY_INTENT","action":"QUERY_TODAY","message":"Hi Alex! Today you have 2 tasks: Buy milk and Call dentist (high priority). No reminders today.","data":{}}
-
-[Context] Name: Alex, Today tasks: none, Today reminders: none
-[User] add buy milk as a task
-{"intent":"TASK_INTENT","action":"CREATE_TASK","message":"Done! Added 'buy milk' to your tasks.","data":{"title":"buy milk"}}
-
-[Context] Name: Alex, Today tasks: none
-[User] hi
-{"intent":"CONVERSATION_INTENT","action":"GENERAL_CHAT","message":"Hello Alex! How can I help you today?","data":{}}
-
-[Context] Name: Alex, Today tasks: none
+{"intent":"QUERY_INTENT","action":"QUERY_TODAY","message":"Let me check your schedule!","data":{}}
+[User] what's coming up
+{"intent":"QUERY_INTENT","action":"QUERY_UPCOMING","message":"Here's what's coming up!","data":{}}
+[User] add buy milk task
+{"intent":"TASK_INTENT","action":"CREATE_TASK","message":"Added 'buy milk' to your tasks!","data":{"title":"buy milk"}}
+[User] add todo read book
+{"intent":"TODO_INTENT","action":"CREATE_TODO","message":"Added 'read book' to your todos!","data":{"title":"read book"}}
 [User] remind me to call mom at 6pm
-{"intent":"REMINDER_INTENT","action":"CREATE_REMINDER","message":"Reminder set! I'll remind you to call mom at 6 PM.","data":{"title":"call mom"}}
-
-[Context] Name: Alex, People: none
-[User] add sarah as my colleague
-{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Sarah as a colleague!","data":{"name":"sarah","relationship_type":"colleague"}}`;
+{"intent":"REMINDER_INTENT","action":"CREATE_REMINDER","message":"Reminder set for calling mom!","data":{"title":"call mom"}}
+[User] add john as a friend
+{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added John as a friend!","data":{"name":"john","relationship_type":"friend"}}
+[User] hi
+{"intent":"CONVERSATION_INTENT","action":"GENERAL_CHAT","message":"Hello! How can I help you today?","data":{}}
+[User] tell me something
+{"intent":"CONVERSATION_INTENT","action":"GENERAL_CHAT","message":"I'm here to help you stay organized! Try asking me to add a task or reminder.","data":{}}`;
 
 function todayStart(): number {
   const d = new Date();

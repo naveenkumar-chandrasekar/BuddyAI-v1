@@ -1,15 +1,18 @@
 import { create } from 'zustand';
 import type { Person, CreatePersonInput, UpdatePersonInput } from '../../../domain/models/Person';
+import type { PersonConnection, CreatePersonConnectionInput } from '../../../domain/models/PersonConnection';
 import type { Place, CreatePlaceInput } from '../../../domain/models/Place';
 import { getPeople, searchPeople, filterPeopleByRelationship } from '../../../domain/usecases/people/GetPeopleUseCase';
 import { addPerson } from '../../../domain/usecases/people/AddPersonUseCase';
 import { updatePerson } from '../../../domain/usecases/people/UpdatePersonUseCase';
 import { deletePerson } from '../../../domain/usecases/people/DeletePersonUseCase';
 import { placesRepository } from '../../../data/repositories/PlacesRepository';
+import { peopleRepository } from '../../../data/repositories/PeopleRepository';
 
 interface PeopleState {
   people: Person[];
   places: Place[];
+  connections: PersonConnection[];
   loading: boolean;
   error: string | null;
 
@@ -21,11 +24,15 @@ interface PeopleState {
   updatePerson(id: string, input: UpdatePersonInput): Promise<Person>;
   deletePerson(id: string): Promise<void>;
   addPlace(input: CreatePlaceInput): Promise<Place>;
+  loadConnections(personId: string): Promise<void>;
+  addConnection(input: CreatePersonConnectionInput): Promise<PersonConnection>;
+  removeConnection(id: string): Promise<void>;
 }
 
 export const usePeopleStore = create<PeopleState>((set, _get) => ({
   people: [],
   places: [],
+  connections: [],
   loading: false,
   error: null,
 
@@ -89,5 +96,25 @@ export const usePeopleStore = create<PeopleState>((set, _get) => ({
     const place = await placesRepository.create(input);
     set(s => ({ places: [...s.places, place] }));
     return place;
+  },
+
+  async loadConnections(personId) {
+    try {
+      const connections = await peopleRepository.getConnectionsForPerson(personId);
+      set({ connections });
+    } catch (e) {
+      set({ error: String(e) });
+    }
+  },
+
+  async addConnection(input) {
+    const conn = await peopleRepository.addConnection(input);
+    set(s => ({ connections: [...s.connections, conn] }));
+    return conn;
+  },
+
+  async removeConnection(id) {
+    await peopleRepository.removeConnection(id);
+    set(s => ({ connections: s.connections.filter(c => c.id !== id) }));
   },
 }));

@@ -1,18 +1,16 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, BackHandler, Platform } from 'react-native';
 import { Button, Text } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../../../app/navigation/types';
 import { storage } from '../../../core/storage/mmkv';
 
 export default function OnboardingReadyScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const name = storage.getString('user_name') ?? 'there';
 
   function handleStart() {
     storage.set('onboarding_done', true);
-    navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+    if (Platform.OS === 'android') {
+      BackHandler.exitApp();
+    }
   }
 
   return (
@@ -21,10 +19,10 @@ export default function OnboardingReadyScreen() {
         {"You're all set, " + name + '!'}
       </Text>
       <Text variant="bodyMedium" style={styles.body}>
-        BuddyAi is ready. Start by adding people or just chat with me.
+        BuddyAi is ready. Reopen the app to download the AI model and get started.
       </Text>
       <Button mode="contained" onPress={handleStart} style={styles.button}>
-        Let's go
+        Close & Continue
       </Button>
     </View>
   );
