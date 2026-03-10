@@ -1,16 +1,20 @@
 import React from 'react';
-import { View, StyleSheet, BackHandler, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Button, Text } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../../../app/navigation/types';
 import { storage } from '../../../core/storage/mmkv';
 
+type Nav = NativeStackNavigationProp<RootStackParamList>;
+
 export default function OnboardingReadyScreen() {
+  const navigation = useNavigation<Nav>();
   const name = storage.getString('user_name') ?? 'there';
 
   function handleStart() {
     storage.set('onboarding_done', true);
-    if (Platform.OS === 'android') {
-      BackHandler.exitApp();
-    }
+    navigation.replace('ModelDownload');
   }
 
   return (
@@ -19,10 +23,10 @@ export default function OnboardingReadyScreen() {
         {"You're all set, " + name + '!'}
       </Text>
       <Text variant="bodyMedium" style={styles.body}>
-        BuddyAi is ready. Reopen the app to download the AI model and get started.
+        BuddyAi needs to download the AI model (~400 MB) to work. Connect to Wi-Fi and tap below.
       </Text>
       <Button mode="contained" onPress={handleStart} style={styles.button}>
-        Close & Continue
+        Download AI Model
       </Button>
     </View>
   );

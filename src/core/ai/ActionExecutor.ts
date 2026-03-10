@@ -22,14 +22,29 @@ function toPriority(val: unknown): typeof Priority[keyof typeof Priority] {
   return Priority.MEDIUM;
 }
 
+
+const VALID_RELATIONSHIP_TYPES = ['family', 'college', 'school', 'office', 'other', 'custom'];
+
+function toRelationshipType(val: unknown): string {
+  const s = String(val ?? '').toLowerCase();
+  if (VALID_RELATIONSHIP_TYPES.includes(s)) return s;
+  // Map common LLM synonyms to valid values
+  if (s === 'friend' || s === 'friends') return 'other';
+  if (s === 'colleague' || s === 'coworker' || s === 'work') return 'office';
+  if (s === 'classmate') return 'college';
+  return 'other';
+}
+
 export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
   const d = intent.data;
   try {
     switch (intent.action) {
-      case 'CREATE_PERSON':
+      case 'CREATE_PERSON': {
+        const personName = String(d.name ?? '').trim();
+        if (!personName) return { success: false, message: 'Person name is required' };
         await addPerson({
-          name: String(d.name ?? ''),
-          relationshipType: String(d.relationship_type ?? 'other') as never,
+          name: personName,
+          relationshipType: toRelationshipType(d.relationship_type) as never,
           priority: toPriority(d.priority),
           customRelation: d.custom_relation ? String(d.custom_relation) : undefined,
           placeId: d.place_id ? String(d.place_id) : undefined,
@@ -38,6 +53,7 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
           notes: d.notes ? String(d.notes) : undefined,
         });
         return { success: true };
+      }
 
       case 'UPDATE_PERSON':
         if (!d.id) return { success: false, message: 'Person ID required' };

@@ -12,11 +12,22 @@ Actions:
 TASK_INTENT: CREATE_TASK, COMPLETE_TASK, DELETE_TASK
 TODO_INTENT: CREATE_TODO, COMPLETE_TODO, DELETE_TODO
 REMINDER_INTENT: CREATE_REMINDER, DELETE_REMINDER
-PEOPLE_INTENT: CREATE_PERSON, UPDATE_PERSON, LIST_PEOPLE
+PEOPLE_INTENT: CREATE_PERSON, UPDATE_PERSON, DELETE_PERSON
 QUERY_INTENT: QUERY_TODAY, QUERY_UPCOMING, QUERY_BIRTHDAYS
 CONVERSATION_INTENT: GENERAL_CHAT
 
-data fields: title, due_date(unix ms), remind_at(unix ms), id, person_id, priority(1=high 2=med 3=low)
+data fields:
+- title (string)
+- name (string, for people)
+- relationship_type: one of family|college|school|office|other|custom
+- due_date (unix ms)
+- remind_at (unix ms)
+- id (string, for update/delete/complete — use id from context)
+- person_id (string)
+- priority (1=high 2=medium 3=low, default 2)
+- phone (string, optional)
+- birthday (YYYY-MM-DD, optional)
+- notes (string, optional)
 
 Examples:
 [User] what do I have today
@@ -29,8 +40,12 @@ Examples:
 {"intent":"TODO_INTENT","action":"CREATE_TODO","message":"Added 'read book' to your todos!","data":{"title":"read book"}}
 [User] remind me to call mom at 6pm
 {"intent":"REMINDER_INTENT","action":"CREATE_REMINDER","message":"Reminder set for calling mom!","data":{"title":"call mom"}}
-[User] add john as a friend
-{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added John as a friend!","data":{"name":"john","relationship_type":"friend"}}
+[User] add john to family
+{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added John to your people!","data":{"name":"john","relationship_type":"family"}}
+[User] add sarah as a colleague
+{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Sarah to your people!","data":{"name":"sarah","relationship_type":"office"}}
+[User] create person mike
+{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Mike to your people!","data":{"name":"mike","relationship_type":"other"}}
 [User] hi
 {"intent":"CONVERSATION_INTENT","action":"GENERAL_CHAT","message":"Hello! How can I help you today?","data":{}}
 [User] tell me something
