@@ -25,7 +25,7 @@ const PRIORITY_DOT: Record<number, string> = {
 function avatarColor(name: string): string {
   const palette = ['#5B3EBF', '#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#F4511E'];
   let h = 0;
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + h * 31;
   return palette[Math.abs(h) % palette.length];
 }
 

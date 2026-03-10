@@ -31,7 +31,7 @@ function avatarColor(name: string): string {
   if (!name) return '#5B3EBF';
   const palette = ['#5B3EBF', '#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#F4511E'];
   let h = 0;
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + h * 31;
   return palette[Math.abs(h) % palette.length];
 }
 
@@ -134,14 +134,16 @@ export default function AddEditPersonScreen({ navigation, route }: AddEditPerson
         {Object.values(RelationshipType).map(r => {
           const color = RELATION_COLORS[r];
           const selected = relation === r;
+          const chipStyle = { borderColor: color, backgroundColor: selected ? color : 'transparent' };
+          const chipLabelStyle = { color: selected ? '#fff' : color };
           return (
             <TouchableOpacity
               key={r}
               onPress={() => setRelation(r)}
-              style={[styles.relChip, { borderColor: color, backgroundColor: selected ? color : 'transparent' }]}
+              style={[styles.relChip, chipStyle]}
             >
               <Text style={styles.relChipIcon}>{RELATION_ICONS[r]}</Text>
-              <Text style={[styles.relChipLabel, { color: selected ? '#fff' : color }]}>
+              <Text style={[styles.relChipLabel, chipLabelStyle]}>
                 {RELATIONSHIP_LABELS[r]}
               </Text>
             </TouchableOpacity>

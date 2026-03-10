@@ -20,7 +20,7 @@ const PRIORITY_COLOR: Record<number, string> = {
 function avatarColor(name: string): string {
   const palette = ['#5B3EBF', '#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#F4511E'];
   let h = 0;
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + h * 31;
   return palette[Math.abs(h) % palette.length];
 }
 
@@ -93,7 +93,7 @@ export default function PersonDetailScreen({ navigation, route }: PersonDetailSc
         </View>
         <Text style={styles.heroName}>{person.name}</Text>
         <View style={[styles.heroBadge, { backgroundColor: relColor + '33', borderColor: relColor }]}>
-          <Text style={[styles.heroBadgeText, { color: '#fff' }]}>{relLabel}</Text>
+          <Text style={styles.heroBadgeText}>{relLabel}</Text>
         </View>
       </View>
 
@@ -180,7 +180,7 @@ export default function PersonDetailScreen({ navigation, route }: PersonDetailSc
 
       {/* Tasks / Todos / Reminders */}
       {loading ? (
-        <ActivityIndicator style={{ marginTop: 24 }} />
+        <ActivityIndicator style={styles.loader} />
       ) : (
         <>
           {tasks.length > 0 && (
@@ -239,7 +239,7 @@ export default function PersonDetailScreen({ navigation, route }: PersonDetailSc
                   <View style={[styles.personChipAvatar, { backgroundColor: avatarColor(p.name) }]}>
                     <Text style={styles.personChipInitials}>{initials(p.name)}</Text>
                   </View>
-                  <Text style={[styles.personChipName, connPersonId === p.id && { color: '#5B3EBF', fontWeight: '700' }]}>
+                  <Text style={[styles.personChipName, connPersonId === p.id && styles.personChipNameSelected]}>
                     {p.name}
                   </Text>
                 </TouchableOpacity>
@@ -251,7 +251,7 @@ export default function PersonDetailScreen({ navigation, route }: PersonDetailSc
               onChangeText={setConnLabel}
               mode="outlined"
               placeholder="e.g. husband, sister, manager"
-              style={{ marginTop: 12 }}
+              style={styles.connLabelInput}
               dense
             />
           </Dialog.Content>
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   heroInitials: { color: '#fff', fontSize: 30, fontWeight: '700' },
   heroName: { color: '#fff', fontSize: 24, fontWeight: '700', marginBottom: 8 },
   heroBadge: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 },
-  heroBadgeText: { fontSize: 13, fontWeight: '600' },
+  heroBadgeText: { fontSize: 13, fontWeight: '600', color: '#fff' },
   actions: { flexDirection: 'row', justifyContent: 'center', gap: 32, paddingVertical: 16 },
   actionBtn: { alignItems: 'center', gap: 4 },
   actionIcon: { fontSize: 24 },
@@ -321,4 +321,7 @@ const styles = StyleSheet.create({
   personChipAvatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   personChipInitials: { color: '#fff', fontWeight: '700' },
   personChipName: { fontSize: 11, opacity: 0.7, maxWidth: 52, textAlign: 'center' },
+  personChipNameSelected: { color: '#5B3EBF', fontWeight: '700' },
+  loader: { marginTop: 24 },
+  connLabelInput: { marginTop: 12 },
 });
