@@ -16,46 +16,50 @@ PEOPLE_INTENT: CREATE_PERSON, UPDATE_PERSON, DELETE_PERSON, CREATE_CONNECTION
 QUERY_INTENT: QUERY_TODAY, QUERY_UPCOMING, QUERY_BIRTHDAYS
 CONVERSATION_INTENT: GENERAL_CHAT
 
-data fields:
-- title (string)
-- name (string, for people)
-- relationship_type: one of family|college|school|office|other|custom
-- due_date (unix ms)
-- remind_at (unix ms)
-- id (string, for update/delete/complete — use id from context)
-- person_id (string)
-- priority (1=high 2=medium 3=low, default 2)
-- phone (string, optional)
-- birthday (YYYY-MM-DD, optional)
-- notes (string, optional)
-- person1_name, person2_name (string, for CREATE_CONNECTION)
-- label (string, relationship label for CREATE_CONNECTION)
+Rules:
+- NEVER output due_date or remind_at — the app parses dates itself
+- For CREATE_TASK and CREATE_TODO: output only title and priority
+- For CREATE_REMINDER: output only title and priority
+- For CREATE_PERSON: output name and relationship_type (family|college|school|office|other|custom)
+- For CREATE_CONNECTION: output person1_name, person2_name, label
+- For COMPLETE_TASK/COMPLETE_TODO/DELETE_*/UPDATE_*: output id from context
+- priority: 1=high 2=medium 3=low (default 2)
 
 Examples:
 [User] what do I have today
 {"intent":"QUERY_INTENT","action":"QUERY_TODAY","message":"Let me check your schedule!","data":{}}
 [User] what's coming up
 {"intent":"QUERY_INTENT","action":"QUERY_UPCOMING","message":"Here's what's coming up!","data":{}}
+[User] upcoming birthdays
+{"intent":"QUERY_INTENT","action":"QUERY_BIRTHDAYS","message":"Here are upcoming birthdays!","data":{}}
 [User] add buy milk task
-{"intent":"TASK_INTENT","action":"CREATE_TASK","message":"Added 'buy milk' to your tasks!","data":{"title":"buy milk"}}
+{"intent":"TASK_INTENT","action":"CREATE_TASK","message":"Added 'buy milk' to your tasks!","data":{"title":"buy milk","priority":2}}
+[User] add urgent task submit report
+{"intent":"TASK_INTENT","action":"CREATE_TASK","message":"Added 'submit report' as high priority!","data":{"title":"submit report","priority":1}}
 [User] add todo read book
-{"intent":"TODO_INTENT","action":"CREATE_TODO","message":"Added 'read book' to your todos!","data":{"title":"read book"}}
-[User] remind me to call mom at 6pm
-{"intent":"REMINDER_INTENT","action":"CREATE_REMINDER","message":"Reminder set for calling mom!","data":{"title":"call mom"}}
+{"intent":"TODO_INTENT","action":"CREATE_TODO","message":"Added 'read book' to your todos!","data":{"title":"read book","priority":2}}
+[User] remind me to call mom
+{"intent":"REMINDER_INTENT","action":"CREATE_REMINDER","message":"I'll remind you to call mom!","data":{"title":"call mom","priority":2}}
+[User] remind me to take medicine
+{"intent":"REMINDER_INTENT","action":"CREATE_REMINDER","message":"I'll remind you to take medicine!","data":{"title":"take medicine","priority":2}}
 [User] add john to family
-{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added John to your people!","data":{"name":"john","relationship_type":"family"}}
+{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added John!","data":{"name":"john","relationship_type":"family"}}
 [User] add sarah as a colleague
-{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Sarah to your people!","data":{"name":"sarah","relationship_type":"office"}}
-[User] create person mike
-{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Mike to your people!","data":{"name":"mike","relationship_type":"other"}}
+{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Sarah!","data":{"name":"sarah","relationship_type":"office"}}
+[User] add mike
+{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Mike!","data":{"name":"mike","relationship_type":"other"}}
 [User] relate john and sarah as siblings
-{"intent":"PEOPLE_INTENT","action":"CREATE_CONNECTION","message":"Connected John and Sarah as siblings!","data":{"person1_name":"john","person2_name":"sarah","label":"siblings"}}
-[User] connect mike and alice they are cousins
-{"intent":"PEOPLE_INTENT","action":"CREATE_CONNECTION","message":"Connected Mike and Alice as cousins!","data":{"person1_name":"mike","person2_name":"alice","label":"cousins"}}
+{"intent":"PEOPLE_INTENT","action":"CREATE_CONNECTION","message":"Connected John and Sarah!","data":{"person1_name":"john","person2_name":"sarah","label":"siblings"}}
+[User] connect mike and alice as cousins
+{"intent":"PEOPLE_INTENT","action":"CREATE_CONNECTION","message":"Connected Mike and Alice!","data":{"person1_name":"mike","person2_name":"alice","label":"cousins"}}
+[User] mark buy milk as done
+{"intent":"TASK_INTENT","action":"COMPLETE_TASK","message":"Marked as done!","data":{"id":"TASK_ID_FROM_CONTEXT"}}
+[User] delete remind me task
+{"intent":"TASK_INTENT","action":"DELETE_TASK","message":"Deleted!","data":{"id":"TASK_ID_FROM_CONTEXT"}}
 [User] hi
 {"intent":"CONVERSATION_INTENT","action":"GENERAL_CHAT","message":"Hello! How can I help you today?","data":{}}
-[User] tell me something
-{"intent":"CONVERSATION_INTENT","action":"GENERAL_CHAT","message":"I'm here to help you stay organized! Try asking me to add a task or reminder.","data":{}}`;
+[User] what can you do
+{"intent":"CONVERSATION_INTENT","action":"GENERAL_CHAT","message":"I can manage your tasks, todos, reminders, and people. Just ask!","data":{}}`;
 
 function todayStart(): number {
   const d = new Date();

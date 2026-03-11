@@ -5,13 +5,17 @@ import { parseIntent, isConversationalOnly } from '../../../core/ai/IntentParser
 import { executeAction } from '../../../core/ai/ActionExecutor';
 import { buildQueryTodayMessage, buildQueryUpcomingMessage, buildBirthdayMessage } from '../../../core/ai/QueryResponseBuilder';
 import { classifyByKeyword } from '../../../core/ai/KeywordClassifier';
-import { parseDate, hasDateInText } from '../../../core/ai/DateParser';
+import { parseDate } from '../../../core/ai/DateParser';
 import type { ChatMessage } from '../../models/Chat';
 
 type PendingAction =
+  | { action: 'CREATE_PERSON'; step: 'name'; data: Record<string, unknown> }
   | { action: 'CREATE_PERSON'; step: 'relationship'; data: Record<string, unknown> }
+  | { action: 'CREATE_TASK'; step: 'title'; data: Record<string, unknown> }
   | { action: 'CREATE_TASK'; step: 'due_date'; data: Record<string, unknown> }
+  | { action: 'CREATE_TODO'; step: 'title'; data: Record<string, unknown> }
   | { action: 'CREATE_TODO'; step: 'due_date'; data: Record<string, unknown> }
+  | { action: 'CREATE_REMINDER'; step: 'title'; data: Record<string, unknown> }
   | { action: 'CREATE_REMINDER'; step: 'remind_at'; data: Record<string, unknown> };
 
 let pending: PendingAction | null = null;
@@ -36,23 +40,41 @@ function extractRelationship(text: string): string | null {
   return null;
 }
 
-async function savePending(sessionId: string, pa: PendingAction): Promise<ChatMessage> {
-  let question: string;
-  if (pa.action === 'CREATE_PERSON') {
-    question = `Got it! What's ${String(pa.data.name)}'s relationship group?\n(family / college / school / office / other)`;
-  } else if (pa.action === 'CREATE_TASK') {
-    question = `When is "${String(pa.data.title)}" due?\n(e.g. tomorrow, Friday, March 15 — or say "skip")`;
-  } else if (pa.action === 'CREATE_TODO') {
-    question = `Any due date for "${String(pa.data.title)}"?\n(e.g. tomorrow, Friday — or say "skip")`;
-  } else {
-    question = `When should I remind you about "${String(pa.data.title)}"?\n(e.g. today at 6pm, tomorrow morning)`;
+function fmtDate(ms: number): string {
+  return new Date(ms).toLocaleString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function fmtDateOnly(ms: number): string {
+  return new Date(ms).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function askQuestion(pa: PendingAction): string {
+  switch (pa.action) {
+    case 'CREATE_PERSON':
+      return pa.step === 'name'
+        ? "What's the person's name?"
+        : `Got it! What's ${String(pa.data.name)}'s relationship?\n(family / college / school / office / other)`;
+    case 'CREATE_TASK':
+      return pa.step === 'title'
+        ? "What's the task?"
+        : `When is "${String(pa.data.title)}" due?\n(e.g. tomorrow, Friday at 5pm — or "skip")`;
+    case 'CREATE_TODO':
+      return pa.step === 'title'
+        ? "What's the todo item?"
+        : `Any due date for "${String(pa.data.title)}"?\n(e.g. tomorrow, Friday — or "skip")`;
+    case 'CREATE_REMINDER':
+      return pa.step === 'title'
+        ? "What should I remind you about?"
+        : `When should I remind you about "${String(pa.data.title)}"?\n(e.g. today at 6pm, tomorrow morning)`;
   }
+}
+
+async function storePending(sessionId: string, pa: PendingAction): Promise<ChatMessage> {
   pending = pa;
   return chatMessageRepository.create({
-    sessionId,
-    sender: 'ai',
-    message: question,
-    messageType: 'text',
+    sessionId, sender: 'ai', message: askQuestion(pa), messageType: 'text',
   });
 }
 
@@ -63,12 +85,19 @@ async function resolvePending(
 ): Promise<ChatMessage | null> {
   pending = null;
 
-  if (pa.action === 'CREATE_PERSON') {
+  // ── CREATE_PERSON ──────────────────────────────────────────────────────────
+  if (pa.action === 'CREATE_PERSON' && pa.step === 'name') {
+    const name = userText.trim();
+    return storePending(sessionId, { action: 'CREATE_PERSON', step: 'relationship', data: { ...pa.data, name } });
+  }
+
+  if (pa.action === 'CREATE_PERSON' && pa.step === 'relationship') {
     const rel = extractRelationship(userText);
     if (!rel) {
+      pending = pa;
       return chatMessageRepository.create({
         sessionId, sender: 'ai',
-        message: `I didn't catch that. Please say one of: family, college, school, office, other`,
+        message: "Please say one of: family, college, school, office, other",
         messageType: 'text',
       });
     }
@@ -87,14 +116,20 @@ async function resolvePending(
     });
   }
 
-  if (pa.action === 'CREATE_TASK') {
+  // ── CREATE_TASK ────────────────────────────────────────────────────────────
+  if (pa.action === 'CREATE_TASK' && pa.step === 'title') {
+    const title = userText.trim();
+    return storePending(sessionId, { action: 'CREATE_TASK', step: 'due_date', data: { ...pa.data, title } });
+  }
+
+  if (pa.action === 'CREATE_TASK' && pa.step === 'due_date') {
     const dueDate = parseDate(userText);
     const result = await executeAction({
       intent: 'TASK_INTENT', action: 'CREATE_TASK', message: '',
       data: { ...pa.data, ...(dueDate ? { due_date: dueDate } : {}) },
     });
     const title = String(pa.data.title);
-    const dateStr = dueDate ? new Date(dueDate).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'no due date';
+    const dateStr = dueDate ? fmtDate(dueDate) : 'no due date';
     return chatMessageRepository.create({
       sessionId, sender: 'ai',
       message: result.success ? `Added task "${title}" (${dateStr})!` : `Couldn't add task: ${result.message}`,
@@ -104,14 +139,20 @@ async function resolvePending(
     });
   }
 
-  if (pa.action === 'CREATE_TODO') {
+  // ── CREATE_TODO ────────────────────────────────────────────────────────────
+  if (pa.action === 'CREATE_TODO' && pa.step === 'title') {
+    const title = userText.trim();
+    return storePending(sessionId, { action: 'CREATE_TODO', step: 'due_date', data: { ...pa.data, title } });
+  }
+
+  if (pa.action === 'CREATE_TODO' && pa.step === 'due_date') {
     const dueDate = parseDate(userText);
     const result = await executeAction({
       intent: 'TODO_INTENT', action: 'CREATE_TODO', message: '',
       data: { ...pa.data, ...(dueDate ? { due_date: dueDate } : {}) },
     });
     const title = String(pa.data.title);
-    const dateStr = dueDate ? new Date(dueDate).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'no due date';
+    const dateStr = dueDate ? fmtDateOnly(dueDate) : 'no due date';
     return chatMessageRepository.create({
       sessionId, sender: 'ai',
       message: result.success ? `Added todo "${title}" (${dateStr})!` : `Couldn't add todo: ${result.message}`,
@@ -121,13 +162,19 @@ async function resolvePending(
     });
   }
 
-  if (pa.action === 'CREATE_REMINDER') {
+  // ── CREATE_REMINDER ────────────────────────────────────────────────────────
+  if (pa.action === 'CREATE_REMINDER' && pa.step === 'title') {
+    const title = userText.trim();
+    return storePending(sessionId, { action: 'CREATE_REMINDER', step: 'remind_at', data: { ...pa.data, title } });
+  }
+
+  if (pa.action === 'CREATE_REMINDER' && pa.step === 'remind_at') {
     const remindAt = parseDate(userText);
     if (!remindAt) {
       pending = pa;
       return chatMessageRepository.create({
         sessionId, sender: 'ai',
-        message: `I need a time to set the reminder. Try "today at 6pm" or "tomorrow morning".`,
+        message: `I need a specific time. Try "today at 6pm" or "tomorrow morning".`,
         messageType: 'text',
       });
     }
@@ -136,7 +183,7 @@ async function resolvePending(
       data: { ...pa.data, remind_at: remindAt },
     });
     const title = String(pa.data.title);
-    const timeStr = new Date(remindAt).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const timeStr = fmtDate(remindAt);
     return chatMessageRepository.create({
       sessionId, sender: 'ai',
       message: result.success ? `Reminder set for "${title}" on ${timeStr}!` : `Couldn't set reminder: ${result.message}`,
@@ -182,48 +229,66 @@ export async function sendMessage(
       intent = parseIntent(rawResponse);
     }
 
+    // ── CREATE_PERSON ────────────────────────────────────────────────────────
     if (intent.action === 'CREATE_PERSON') {
       const name = String(intent.data.name ?? '').trim();
       if (!name) {
-        const aiMessage = await chatMessageRepository.create({
-          sessionId, sender: 'ai', message: "What's the person's name?", messageType: 'text',
-        });
+        const aiMessage = await storePending(sessionId, { action: 'CREATE_PERSON', step: 'name', data: intent.data });
         return { userMessage, aiMessage };
       }
-      if (!extractRelationship(userText)) {
-        const aiMessage = await savePending(sessionId, {
-          action: 'CREATE_PERSON', step: 'relationship', data: intent.data,
-        });
+      const detectedRel = extractRelationship(userText);
+      if (detectedRel) {
+        intent.data.relationship_type = detectedRel;
+      } else {
+        const aiMessage = await storePending(sessionId, { action: 'CREATE_PERSON', step: 'relationship', data: intent.data });
         return { userMessage, aiMessage };
       }
     }
 
+    // ── CREATE_TASK ──────────────────────────────────────────────────────────
     if (intent.action === 'CREATE_TASK') {
       const title = String(intent.data.title ?? '').trim();
-      if (title && !hasDateInText(userText) && !intent.data.due_date) {
-        const aiMessage = await savePending(sessionId, {
-          action: 'CREATE_TASK', step: 'due_date', data: intent.data,
-        });
+      if (!title) {
+        const aiMessage = await storePending(sessionId, { action: 'CREATE_TASK', step: 'title', data: intent.data });
+        return { userMessage, aiMessage };
+      }
+      const parsedDate = parseDate(userText);
+      if (parsedDate) {
+        intent.data.due_date = parsedDate;
+      } else if (!intent.data.due_date) {
+        const aiMessage = await storePending(sessionId, { action: 'CREATE_TASK', step: 'due_date', data: intent.data });
         return { userMessage, aiMessage };
       }
     }
 
+    // ── CREATE_TODO ──────────────────────────────────────────────────────────
     if (intent.action === 'CREATE_TODO') {
       const title = String(intent.data.title ?? '').trim();
-      if (title && !hasDateInText(userText) && !intent.data.due_date) {
-        const aiMessage = await savePending(sessionId, {
-          action: 'CREATE_TODO', step: 'due_date', data: intent.data,
-        });
+      if (!title) {
+        const aiMessage = await storePending(sessionId, { action: 'CREATE_TODO', step: 'title', data: intent.data });
+        return { userMessage, aiMessage };
+      }
+      const parsedDate = parseDate(userText);
+      if (parsedDate) {
+        intent.data.due_date = parsedDate;
+      } else if (!intent.data.due_date) {
+        const aiMessage = await storePending(sessionId, { action: 'CREATE_TODO', step: 'due_date', data: intent.data });
         return { userMessage, aiMessage };
       }
     }
 
+    // ── CREATE_REMINDER ──────────────────────────────────────────────────────
     if (intent.action === 'CREATE_REMINDER') {
       const title = String(intent.data.title ?? '').trim();
-      if (title && !hasDateInText(userText) && !intent.data.remind_at) {
-        const aiMessage = await savePending(sessionId, {
-          action: 'CREATE_REMINDER', step: 'remind_at', data: intent.data,
-        });
+      if (!title) {
+        const aiMessage = await storePending(sessionId, { action: 'CREATE_REMINDER', step: 'title', data: intent.data });
+        return { userMessage, aiMessage };
+      }
+      const parsedDate = parseDate(userText);
+      if (parsedDate) {
+        intent.data.remind_at = parsedDate;
+      } else if (!intent.data.remind_at) {
+        const aiMessage = await storePending(sessionId, { action: 'CREATE_REMINDER', step: 'remind_at', data: intent.data });
         return { userMessage, aiMessage };
       }
     }
