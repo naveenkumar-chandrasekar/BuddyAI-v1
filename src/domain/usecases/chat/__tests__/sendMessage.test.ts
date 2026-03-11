@@ -100,12 +100,43 @@ describe('sendMessage', () => {
       .mockResolvedValueOnce(makeMsg({ sender: 'user' }))
       .mockResolvedValueOnce(makeMsg({ sender: 'ai', messageType: 'action' }));
 
-    await sendMessage('sess1', 'Add a task to buy milk');
+    // Include "today" so hasDateInText returns true and flow executes immediately
+    await sendMessage('sess1', 'Add a task to buy milk today');
 
     expect(executeAction).toHaveBeenCalledWith(expect.objectContaining({ action: 'CREATE_TASK' }));
     const aiCallArg = chatMessageRepository.create.mock.calls[1][0];
     expect(aiCallArg.messageType).toBe('action');
     expect(aiCallArg.actionType).toBe('CREATE_TASK');
+  });
+
+  it('asks for due date when CREATE_TASK has no date, then executes on follow-up', async () => {
+    const { executeAction } = jest.requireMock('../../../../core/ai/ActionExecutor');
+    llamaMod.llamaService.isInitialized = true;
+    llamaMod.llamaService.complete.mockResolvedValue('...');
+
+    parseIntent.mockReturnValue({
+      intent: 'TASK_INTENT', action: 'CREATE_TASK', message: 'Task created!',
+      data: { title: 'Buy milk' },
+    });
+    isConversationalOnly.mockReturnValue(false);
+
+    chatMessageRepository.create
+      .mockResolvedValueOnce(makeMsg({ sender: 'user', message: 'add task buy milk' }))
+      .mockResolvedValueOnce(makeMsg({ sender: 'ai', message: 'When is "Buy milk" due?', messageType: 'text' }));
+
+    // First turn — no date → should ask
+    await sendMessage('sess1', 'add task buy milk');
+    const askArg = chatMessageRepository.create.mock.calls[1][0];
+    expect(askArg.messageType).toBe('text');
+    expect(executeAction).not.toHaveBeenCalled();
+
+    // Second turn — provide date
+    chatMessageRepository.create
+      .mockResolvedValueOnce(makeMsg({ sender: 'user', message: 'tomorrow' }))
+      .mockResolvedValueOnce(makeMsg({ sender: 'ai', messageType: 'action', actionType: 'CREATE_TASK' }));
+
+    await sendMessage('sess1', 'tomorrow');
+    expect(executeAction).toHaveBeenCalledWith(expect.objectContaining({ action: 'CREATE_TASK' }));
   });
 
   it('returns error message if inference throws', async () => {
