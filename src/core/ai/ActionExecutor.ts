@@ -1,6 +1,7 @@
 import { addPerson } from '../../domain/usecases/people/AddPersonUseCase';
 import { updatePerson } from '../../domain/usecases/people/UpdatePersonUseCase';
 import { deletePerson } from '../../domain/usecases/people/DeletePersonUseCase';
+import { peopleRepository } from '../../data/repositories/PeopleRepository';
 import { addTask, addTodo, addReminder } from '../../domain/usecases/tasks/AddTaskUseCase';
 import { updateTask, toggleTodo } from '../../domain/usecases/tasks/UpdateTaskUseCase';
 import { deleteTask, deleteTodo, deleteReminder } from '../../domain/usecases/tasks/DeleteTaskUseCase';
@@ -70,6 +71,25 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
         if (!d.id) return { success: false, message: 'Person ID required' };
         await deletePerson(String(d.id));
         return { success: true };
+
+      case 'CREATE_CONNECTION': {
+        const name1 = String(d.person1_name ?? '').trim();
+        const name2 = String(d.person2_name ?? '').trim();
+        const connLabel = String(d.label ?? 'connected').trim();
+        if (!name1 || !name2) return { success: false, message: 'Both person names required' };
+        const [res1, res2] = await Promise.all([
+          peopleRepository.search(name1),
+          peopleRepository.search(name2),
+        ]);
+        if (!res1.length) return { success: false, message: `Couldn't find "${name1}" in your people.` };
+        if (!res2.length) return { success: false, message: `Couldn't find "${name2}" in your people.` };
+        await peopleRepository.addConnection({
+          personId: res1[0].id,
+          relatedPersonId: res2[0].id,
+          label: connLabel,
+        });
+        return { success: true };
+      }
 
       case 'CREATE_TASK':
         await addTask({

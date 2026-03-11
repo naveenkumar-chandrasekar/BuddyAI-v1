@@ -16,6 +16,7 @@ export type RootStackParamList = {
 export type OnboardingStackParamList = {
   OnboardingWelcome: undefined;
   OnboardingName: undefined;
+  OnboardingProfile: undefined;
   OnboardingNotif: undefined;
   OnboardingPermission: undefined;
   OnboardingReady: undefined;

@@ -35,7 +35,7 @@ function formatBirthday(birthday: string): string {
 
 export default function PersonDetailScreen({ navigation, route }: PersonDetailScreenProps) {
   const { personId } = route.params;
-  const { people, connections, deletePerson, loadConnections, addConnection, removeConnection } = usePeopleStore();
+  const { people, connections, deletePerson, loadPeople, loadConnections, addConnection, removeConnection } = usePeopleStore();
   const person = people.find(p => p.id === personId);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -48,11 +48,12 @@ export default function PersonDetailScreen({ navigation, route }: PersonDetailSc
   const [connSaving, setConnSaving] = useState(false);
 
   useEffect(() => {
+    loadPeople();
     loadConnections(personId);
     getItemsByPerson(personId).then(({ tasks: t, todos: td, reminders: r }) => {
       setTasks(t); setTodos(td); setReminders(r); setLoading(false);
     });
-  }, [personId, loadConnections]);
+  }, [personId, loadPeople, loadConnections]);
 
   async function handleAddConnection() {
     if (!connPersonId || !connLabel.trim()) return;

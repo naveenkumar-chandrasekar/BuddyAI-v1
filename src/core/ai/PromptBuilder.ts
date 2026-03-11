@@ -12,7 +12,7 @@ Actions:
 TASK_INTENT: CREATE_TASK, COMPLETE_TASK, DELETE_TASK
 TODO_INTENT: CREATE_TODO, COMPLETE_TODO, DELETE_TODO
 REMINDER_INTENT: CREATE_REMINDER, DELETE_REMINDER
-PEOPLE_INTENT: CREATE_PERSON, UPDATE_PERSON, DELETE_PERSON
+PEOPLE_INTENT: CREATE_PERSON, UPDATE_PERSON, DELETE_PERSON, CREATE_CONNECTION
 QUERY_INTENT: QUERY_TODAY, QUERY_UPCOMING, QUERY_BIRTHDAYS
 CONVERSATION_INTENT: GENERAL_CHAT
 
@@ -28,6 +28,8 @@ data fields:
 - phone (string, optional)
 - birthday (YYYY-MM-DD, optional)
 - notes (string, optional)
+- person1_name, person2_name (string, for CREATE_CONNECTION)
+- label (string, relationship label for CREATE_CONNECTION)
 
 Examples:
 [User] what do I have today
@@ -46,6 +48,10 @@ Examples:
 {"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Sarah to your people!","data":{"name":"sarah","relationship_type":"office"}}
 [User] create person mike
 {"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Mike to your people!","data":{"name":"mike","relationship_type":"other"}}
+[User] relate john and sarah as siblings
+{"intent":"PEOPLE_INTENT","action":"CREATE_CONNECTION","message":"Connected John and Sarah as siblings!","data":{"person1_name":"john","person2_name":"sarah","label":"siblings"}}
+[User] connect mike and alice they are cousins
+{"intent":"PEOPLE_INTENT","action":"CREATE_CONNECTION","message":"Connected Mike and Alice as cousins!","data":{"person1_name":"mike","person2_name":"alice","label":"cousins"}}
 [User] hi
 {"intent":"CONVERSATION_INTENT","action":"GENERAL_CHAT","message":"Hello! How can I help you today?","data":{}}
 [User] tell me something

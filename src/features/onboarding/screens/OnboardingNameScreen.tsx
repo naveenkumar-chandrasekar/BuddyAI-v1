@@ -14,7 +14,7 @@ export default function OnboardingNameScreen({ navigation }: Props) {
     const trimmed = name.trim();
     if (!trimmed) return;
     storage.set('user_name', trimmed);
-    navigation.navigate('OnboardingNotif');
+    navigation.navigate('OnboardingProfile');
   }
 
   return (

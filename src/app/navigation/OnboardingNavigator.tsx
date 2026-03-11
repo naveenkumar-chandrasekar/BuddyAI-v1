@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { OnboardingStackParamList } from './types';
 import OnboardingWelcomeScreen from '../../features/onboarding/screens/OnboardingWelcomeScreen';
 import OnboardingNameScreen from '../../features/onboarding/screens/OnboardingNameScreen';
+import OnboardingProfileScreen from '../../features/onboarding/screens/OnboardingProfileScreen';
 import OnboardingNotifScreen from '../../features/onboarding/screens/OnboardingNotifScreen';
 import OnboardingPermissionScreen from '../../features/onboarding/screens/OnboardingPermissionScreen';
 import OnboardingReadyScreen from '../../features/onboarding/screens/OnboardingReadyScreen';
@@ -14,6 +15,7 @@ export default function OnboardingNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="OnboardingWelcome" component={OnboardingWelcomeScreen} />
       <Stack.Screen name="OnboardingName" component={OnboardingNameScreen} />
+      <Stack.Screen name="OnboardingProfile" component={OnboardingProfileScreen} />
       <Stack.Screen name="OnboardingNotif" component={OnboardingNotifScreen} />
       <Stack.Screen name="OnboardingPermission" component={OnboardingPermissionScreen} />
       <Stack.Screen name="OnboardingReady" component={OnboardingReadyScreen} />
