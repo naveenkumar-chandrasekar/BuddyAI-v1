@@ -299,6 +299,21 @@ export async function sendMessage(
       }
     }
 
+    // ── CREATE_CONNECTION ────────────────────────────────────────────────────
+    if (intent.action === 'CREATE_CONNECTION') {
+      const p1 = String(intent.data.person1_name ?? '').trim();
+      const p2 = String(intent.data.person2_name ?? '').trim();
+      const lower = userText.toLowerCase();
+      if (!p1 || !p2 || !lower.includes(p1.toLowerCase()) || !lower.includes(p2.toLowerCase())) {
+        const aiMessage = await chatMessageRepository.create({
+          sessionId, sender: 'ai',
+          message: "Please mention both people's names. e.g. \"relate John and Sarah as siblings\"",
+          messageType: 'text',
+        });
+        return { userMessage, aiMessage };
+      }
+    }
+
     let actionType: string | undefined;
     let actionPayload: string | undefined;
     let finalMessage = intent.message;

@@ -22,7 +22,7 @@ Rules:
 - For CREATE_REMINDER: output only title and priority
 - For CREATE_PERSON: output name and relationship_type (family|college|school|office|other|custom)
 - For CREATE_CONNECTION: output person1_name, person2_name, label
-- For COMPLETE_TASK/COMPLETE_TODO/DELETE_*/UPDATE_*: output id from context
+- For COMPLETE_TASK/COMPLETE_TODO/DELETE_*/UPDATE_*: output both id from context AND title/name so the app can find the item even if id is wrong
 - priority: 1=high 2=medium 3=low (default 2)
 
 Examples:
@@ -53,9 +53,17 @@ Examples:
 [User] connect mike and alice as cousins
 {"intent":"PEOPLE_INTENT","action":"CREATE_CONNECTION","message":"Connected Mike and Alice!","data":{"person1_name":"mike","person2_name":"alice","label":"cousins"}}
 [User] mark buy milk as done
-{"intent":"TASK_INTENT","action":"COMPLETE_TASK","message":"Marked as done!","data":{"id":"TASK_ID_FROM_CONTEXT"}}
-[User] delete remind me task
-{"intent":"TASK_INTENT","action":"DELETE_TASK","message":"Deleted!","data":{"id":"TASK_ID_FROM_CONTEXT"}}
+{"intent":"TASK_INTENT","action":"COMPLETE_TASK","message":"Marked buy milk as done!","data":{"id":"ID_FROM_CONTEXT","title":"buy milk"}}
+[User] complete read book todo
+{"intent":"TODO_INTENT","action":"COMPLETE_TODO","message":"Completed read book!","data":{"id":"ID_FROM_CONTEXT","title":"read book"}}
+[User] delete buy milk task
+{"intent":"TASK_INTENT","action":"DELETE_TASK","message":"Deleted buy milk!","data":{"id":"ID_FROM_CONTEXT","title":"buy milk"}}
+[User] delete call mom reminder
+{"intent":"REMINDER_INTENT","action":"DELETE_REMINDER","message":"Deleted reminder!","data":{"id":"ID_FROM_CONTEXT","title":"call mom"}}
+[User] delete john from people
+{"intent":"PEOPLE_INTENT","action":"DELETE_PERSON","message":"Deleted John!","data":{"id":"ID_FROM_CONTEXT","name":"john"}}
+[User] update john's phone to 555-0100
+{"intent":"PEOPLE_INTENT","action":"UPDATE_PERSON","message":"Updated John's phone!","data":{"id":"ID_FROM_CONTEXT","name":"john","phone":"555-0100"}}
 [User] hi
 {"intent":"CONVERSATION_INTENT","action":"GENERAL_CHAT","message":"Hello! How can I help you today?","data":{}}
 [User] what can you do

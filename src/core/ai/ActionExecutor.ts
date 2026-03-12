@@ -36,6 +36,41 @@ function toRelationshipType(val: unknown): string {
   return 'other';
 }
 
+async function resolveTaskId(id: unknown, title: unknown): Promise<string | null> {
+  const s = String(id ?? '').trim();
+  if (s && s !== 'TASK_ID_FROM_CONTEXT') return s;
+  if (!title) return null;
+  const all = await taskRepository.getAll();
+  const lower = String(title).toLowerCase();
+  return all.find(t => t.title.toLowerCase().includes(lower))?.id ?? null;
+}
+
+async function resolveTodoId(id: unknown, title: unknown): Promise<string | null> {
+  const s = String(id ?? '').trim();
+  if (s && s !== 'TODO_ID_FROM_CONTEXT') return s;
+  if (!title) return null;
+  const all = await todoRepository.getAll();
+  const lower = String(title).toLowerCase();
+  return all.find(t => t.title.toLowerCase().includes(lower))?.id ?? null;
+}
+
+async function resolveReminderId(id: unknown, title: unknown): Promise<string | null> {
+  const s = String(id ?? '').trim();
+  if (s && s !== 'REMINDER_ID_FROM_CONTEXT') return s;
+  if (!title) return null;
+  const all = await reminderRepository.getAll();
+  const lower = String(title).toLowerCase();
+  return all.find(r => r.title.toLowerCase().includes(lower))?.id ?? null;
+}
+
+async function resolvePersonId(id: unknown, name: unknown): Promise<string | null> {
+  const s = String(id ?? '').trim();
+  if (s && s !== 'PERSON_ID_FROM_CONTEXT') return s;
+  if (!name) return null;
+  const results = await peopleRepository.search(String(name));
+  return results[0]?.id ?? null;
+}
+
 export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
   const d = intent.data;
   try {
@@ -56,9 +91,10 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
         return { success: true };
       }
 
-      case 'UPDATE_PERSON':
-        if (!d.id) return { success: false, message: 'Person ID required' };
-        await updatePerson(String(d.id), {
+      case 'UPDATE_PERSON': {
+        const pid = await resolvePersonId(d.id, d.name);
+        if (!pid) return { success: false, message: `Person "${d.name ?? d.id}" not found` };
+        await updatePerson(pid, {
           name: d.name ? String(d.name) : undefined,
           priority: d.priority !== undefined ? toPriority(d.priority) : undefined,
           birthday: d.birthday ? String(d.birthday) : undefined,
@@ -66,11 +102,14 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
           notes: d.notes ? String(d.notes) : undefined,
         });
         return { success: true };
+      }
 
-      case 'DELETE_PERSON':
-        if (!d.id) return { success: false, message: 'Person ID required' };
-        await deletePerson(String(d.id));
+      case 'DELETE_PERSON': {
+        const dpid = await resolvePersonId(d.id, d.name);
+        if (!dpid) return { success: false, message: `Person "${d.name ?? d.id}" not found` };
+        await deletePerson(dpid);
         return { success: true };
+      }
 
       case 'CREATE_CONNECTION': {
         const name1 = String(d.person1_name ?? '').trim();
@@ -101,15 +140,19 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
         });
         return { success: true };
 
-      case 'COMPLETE_TASK':
-        if (!d.id) return { success: false, message: 'Task ID required' };
-        await updateTask(String(d.id), { status: TaskStatus.DONE });
+      case 'COMPLETE_TASK': {
+        const ctid = await resolveTaskId(d.id, d.title);
+        if (!ctid) return { success: false, message: `Task "${d.title ?? d.id}" not found` };
+        await updateTask(ctid, { status: TaskStatus.DONE });
         return { success: true };
+      }
 
-      case 'DELETE_TASK':
-        if (!d.id) return { success: false, message: 'Task ID required' };
-        await deleteTask(String(d.id));
+      case 'DELETE_TASK': {
+        const dtid = await resolveTaskId(d.id, d.title);
+        if (!dtid) return { success: false, message: `Task "${d.title ?? d.id}" not found` };
+        await deleteTask(dtid);
         return { success: true };
+      }
 
       case 'CREATE_TODO': {
         const recurrence = d.recurrence ? String(d.recurrence) : undefined;
@@ -124,15 +167,19 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
         return { success: true };
       }
 
-      case 'COMPLETE_TODO':
-        if (!d.id) return { success: false, message: 'Todo ID required' };
-        await toggleTodo(String(d.id));
+      case 'COMPLETE_TODO': {
+        const ctodoid = await resolveTodoId(d.id, d.title);
+        if (!ctodoid) return { success: false, message: `Todo "${d.title ?? d.id}" not found` };
+        await toggleTodo(ctodoid);
         return { success: true };
+      }
 
-      case 'DELETE_TODO':
-        if (!d.id) return { success: false, message: 'Todo ID required' };
-        await deleteTodo(String(d.id));
+      case 'DELETE_TODO': {
+        const dtodoid = await resolveTodoId(d.id, d.title);
+        if (!dtodoid) return { success: false, message: `Todo "${d.title ?? d.id}" not found` };
+        await deleteTodo(dtodoid);
         return { success: true };
+      }
 
       case 'CREATE_REMINDER':
         await addReminder({
@@ -146,10 +193,12 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
         });
         return { success: true };
 
-      case 'DELETE_REMINDER':
-        if (!d.id) return { success: false, message: 'Reminder ID required' };
-        await deleteReminder(String(d.id));
+      case 'DELETE_REMINDER': {
+        const drid = await resolveReminderId(d.id, d.title);
+        if (!drid) return { success: false, message: `Reminder "${d.title ?? d.id}" not found` };
+        await deleteReminder(drid);
         return { success: true };
+      }
 
       case 'DISMISS_MISSED_ITEM': {
         const type = String(d.type ?? '');
