@@ -2,7 +2,13 @@ import { dismissMissedItem } from '../DismissMissedItemUseCase';
 
 jest.mock('../../../../data/repositories/TaskRepository', () => ({
   taskRepository: { update: jest.fn() },
+}));
+
+jest.mock('../../../../data/repositories/TodoRepository', () => ({
   todoRepository: { update: jest.fn() },
+}));
+
+jest.mock('../../../../data/repositories/ReminderRepository', () => ({
   reminderRepository: { update: jest.fn() },
 }));
 
@@ -11,8 +17,9 @@ jest.mock('../../../../core/notifications/NotifeeService', () => ({
   NOTIF_IDS: { missed: (type: string, id: string) => `missed-${type}-${id}` },
 }));
 
-const { taskRepository, todoRepository, reminderRepository } =
-  jest.requireMock('../../../../data/repositories/TaskRepository');
+const { taskRepository } = jest.requireMock('../../../../data/repositories/TaskRepository');
+const { todoRepository } = jest.requireMock('../../../../data/repositories/TodoRepository');
+const { reminderRepository } = jest.requireMock('../../../../data/repositories/ReminderRepository');
 const { cancelNotification } = jest.requireMock('../../../../core/notifications/NotifeeService');
 
 describe('dismissMissedItem', () => {

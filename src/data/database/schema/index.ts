@@ -2,7 +2,9 @@ import { appSchema } from '@nozbe/watermelondb';
 import { placesSchema } from './placesSchema';
 import { personsSchema } from './peopleSchema';
 import { personConnectionsSchema } from './personConnectionsSchema';
-import { tasksSchema, todosSchema, remindersSchema } from './tasksSchema';
+import { tasksSchema } from './tasksSchema';
+import { todosSchema } from './todoSchema';
+import { remindersSchema } from './reminderSchema';
 import {
   chatSessionsSchema,
   chatMessagesSchema,

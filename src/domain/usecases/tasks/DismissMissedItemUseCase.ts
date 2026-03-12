@@ -1,4 +1,6 @@
-import { taskRepository, todoRepository, reminderRepository } from '../../../data/repositories/TaskRepository';
+import { taskRepository } from '../../../data/repositories/TaskRepository';
+import { todoRepository } from '../../../data/repositories/TodoRepository';
+import { reminderRepository } from '../../../data/repositories/ReminderRepository';
 import { cancelNotification } from '../../../core/notifications/NotifeeService';
 import { NOTIF_IDS } from '../../../core/notifications/NotifeeService';
 

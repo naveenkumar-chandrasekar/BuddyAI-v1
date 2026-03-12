@@ -1,5 +1,5 @@
 import notifee, { AndroidImportance, TriggerType, AndroidVisibility } from '@notifee/react-native';
-import type { Reminder } from '../../domain/models/Task';
+import type { Reminder } from '../../domain/models/Reminder';
 
 export const CHANNEL_IDS = {
   DAILY: 'daily',

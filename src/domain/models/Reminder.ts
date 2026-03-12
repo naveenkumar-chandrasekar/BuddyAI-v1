@@ -1,16 +1,16 @@
 import type { PriorityValue } from '../../shared/constants/priority';
-import type { TaskStatusValue } from '../../shared/constants/taskStatus';
 
-export interface Task {
+export interface Reminder {
   id: string;
   title: string;
   description: string | null;
-  dueDate: number | null;
-  dueTime: number | null;
-  priority: PriorityValue;
-  status: TaskStatusValue;
+  remindAt: number;
+  isRecurring: boolean;
+  recurrence: string | null;
+  isDone: boolean;
   personId: string | null;
   relationType: string | null;
+  priority: PriorityValue;
   isMissed: boolean;
   missedAt: number | null;
   nextRemindAt: number | null;
@@ -18,21 +18,21 @@ export interface Task {
   isDismissed: boolean;
   createdAt: number;
   updatedAt: number;
-  completedAt: number | null;
 }
 
-export interface CreateTaskInput {
+export interface CreateReminderInput {
   title: string;
   description?: string;
-  dueDate?: number;
-  dueTime?: number;
-  priority: PriorityValue;
+  remindAt: number;
+  isRecurring?: boolean;
+  recurrence?: string;
   personId?: string;
   relationType?: string;
+  priority: PriorityValue;
 }
 
-export type UpdateTaskInput = Partial<CreateTaskInput> & {
-  status?: TaskStatusValue;
+export type UpdateReminderInput = Partial<CreateReminderInput> & {
+  isDone?: boolean;
   isMissed?: boolean;
   missedAt?: number | null;
   nextRemindAt?: number | null;

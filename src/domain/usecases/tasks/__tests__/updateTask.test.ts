@@ -1,22 +1,20 @@
-import { toggleTodo } from '../UpdateTaskUseCase';
+import { toggleTodo } from '../UpdateTodoUseCase';
 import { Priority } from '../../../../shared/constants/priority';
 
-jest.mock('../../../../data/repositories/TaskRepository', () => ({
-  taskRepository: { update: jest.fn() },
+jest.mock('../../../../data/repositories/TodoRepository', () => ({
   todoRepository: {
     getById: jest.fn(),
     toggleComplete: jest.fn(),
     remove: jest.fn(),
   },
-  reminderRepository: { update: jest.fn() },
 }));
 
-jest.mock('../AddTaskUseCase', () => ({
+jest.mock('../AddTodoUseCase', () => ({
   addTodo: jest.fn(),
 }));
 
-const { todoRepository } = jest.requireMock('../../../../data/repositories/TaskRepository');
-const { addTodo } = jest.requireMock('../AddTaskUseCase');
+const { todoRepository } = jest.requireMock('../../../../data/repositories/TodoRepository');
+const { addTodo } = jest.requireMock('../AddTodoUseCase');
 
 const BASE_TODO = {
   id: 'td1', title: 'Read book', isCompleted: false, priority: Priority.LOW,

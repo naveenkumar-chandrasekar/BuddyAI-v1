@@ -3,10 +3,12 @@ import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, Linking } from '
 import { Text, Button, Divider, ActivityIndicator, TextInput, Portal, Dialog, Chip } from 'react-native-paper';
 import type { PersonDetailScreenProps } from '../../../app/navigation/types';
 import { usePersonStore } from '../../../features/people/store/peopleStore';
-import { getItemsByPerson } from '../../../domain/usecases/tasks/GetTasksUseCase';
+import { getItemsByPerson } from '../../../domain/usecases/tasks/GetItemsByPersonUseCase';
 import { RELATIONSHIP_LABELS } from '../../../shared/constants/relationships';
 import { PRIORITY_LABELS, Priority } from '../../../shared/constants/priority';
-import type { Task, Todo, Reminder } from '../../../domain/models/Task';
+import type { Task } from '../../../domain/models/Task';
+import type { Todo } from '../../../domain/models/Todo';
+import type { Reminder } from '../../../domain/models/Reminder';
 
 const RELATION_COLORS: Record<string, string> = {
   family: '#E53935', friend: '#8E24AA', school: '#1E88E5',

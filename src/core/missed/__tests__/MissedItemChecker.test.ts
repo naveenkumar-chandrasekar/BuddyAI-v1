@@ -4,7 +4,13 @@ import { TaskStatus } from '../../../shared/constants/taskStatus';
 
 jest.mock('../../../data/repositories/TaskRepository', () => ({
   taskRepository: { getAll: jest.fn(), update: jest.fn() },
+}));
+
+jest.mock('../../../data/repositories/TodoRepository', () => ({
   todoRepository: { getAll: jest.fn(), update: jest.fn() },
+}));
+
+jest.mock('../../../data/repositories/ReminderRepository', () => ({
   reminderRepository: { getAll: jest.fn(), update: jest.fn(), create: jest.fn() },
 }));
 
@@ -16,8 +22,9 @@ jest.mock('../../notifications/NotifeeService', () => ({
   scheduleMissedItemNotification: jest.fn().mockResolvedValue(undefined),
 }));
 
-const { taskRepository, todoRepository, reminderRepository } =
-  jest.requireMock('../../../data/repositories/TaskRepository');
+const { taskRepository } = jest.requireMock('../../../data/repositories/TaskRepository');
+const { todoRepository } = jest.requireMock('../../../data/repositories/TodoRepository');
+const { reminderRepository } = jest.requireMock('../../../data/repositories/ReminderRepository');
 const { notificationConfigRepository } =
   jest.requireMock('../../../data/repositories/NotificationRepository');
 const { scheduleMissedItemNotification } =

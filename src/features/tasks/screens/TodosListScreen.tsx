@@ -7,7 +7,7 @@ import type { TasksStackParamList } from '../../../app/navigation/types';
 import { useTaskStore } from '../store/taskStore';
 import { PRIORITY_LABELS } from '../../../shared/constants/priority';
 import { describeRecurrence } from '../../../core/utils/recurrence';
-import type { Todo } from '../../../domain/models/Task';
+import type { Todo } from '../../../domain/models/Todo';
 
 type Row =
   | { key: string; type: 'header'; label: string }

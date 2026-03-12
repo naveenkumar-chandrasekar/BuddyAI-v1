@@ -1,16 +1,16 @@
 import { tableSchema } from '@nozbe/watermelondb';
 
-export const tasksSchema = tableSchema({
-  name: 'tasks',
+export const todosSchema = tableSchema({
+  name: 'todos',
   columns: [
     { name: 'title', type: 'string' },
-    { name: 'description', type: 'string', isOptional: true },
-    { name: 'due_date', type: 'number', isOptional: true },
-    { name: 'due_time', type: 'number', isOptional: true },
+    { name: 'is_completed', type: 'number' },
     { name: 'priority', type: 'number' },
-    { name: 'status', type: 'string' },
     { name: 'person_id', type: 'string', isOptional: true },
     { name: 'relation_type', type: 'string', isOptional: true },
+    { name: 'due_date', type: 'number', isOptional: true },
+    { name: 'is_recurring', type: 'number' },
+    { name: 'recurrence', type: 'string', isOptional: true },
     { name: 'is_missed', type: 'number' },
     { name: 'missed_at', type: 'number', isOptional: true },
     { name: 'next_remind_at', type: 'number', isOptional: true },

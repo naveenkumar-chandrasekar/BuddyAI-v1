@@ -1,11 +1,15 @@
-import { taskRepository, todoRepository, reminderRepository } from '../../data/repositories/TaskRepository';
+import { taskRepository } from '../../data/repositories/TaskRepository';
+import { todoRepository } from '../../data/repositories/TodoRepository';
+import { reminderRepository } from '../../data/repositories/ReminderRepository';
 import { notificationConfigRepository } from '../../data/repositories/NotificationRepository';
 import { scheduleMissedItemNotification } from '../notifications/NotifeeService';
 import { TaskStatus } from '../../shared/constants/taskStatus';
 import { Priority } from '../../shared/constants/priority';
 import { DEFAULT_NOTIFICATION_CONFIG } from '../../domain/models/Notification';
 import { computeNextDueDate } from '../utils/recurrence';
-import type { Task, Todo, Reminder } from '../../domain/models/Task';
+import type { Task } from '../../domain/models/Task';
+import type { Todo } from '../../domain/models/Todo';
+import type { Reminder } from '../../domain/models/Reminder';
 
 const DAY_MS = 86400000;
 

@@ -1,17 +1,30 @@
-import { getTasks, getTodos, getReminders } from '../GetTasksUseCase';
-import { addTask, addTodo, addReminder } from '../AddTaskUseCase';
-import { deleteTask, deleteTodo, deleteReminder } from '../DeleteTaskUseCase';
+import { getTasks } from '../GetTaskUseCase';
+import { getTodos } from '../GetTodoUseCase';
+import { getReminders } from '../GetReminderUseCase';
+import { addTask } from '../AddTaskUseCase';
+import { addTodo } from '../AddTodoUseCase';
+import { addReminder } from '../AddReminderUseCase';
+import { deleteTask } from '../DeleteTaskUseCase';
+import { deleteTodo } from '../DeleteTodoUseCase';
+import { deleteReminder } from '../DeleteReminderUseCase';
 import { Priority } from '../../../../shared/constants/priority';
 import { TaskStatus } from '../../../../shared/constants/taskStatus';
 
 jest.mock('../../../../data/repositories/TaskRepository', () => ({
   taskRepository: { getAll: jest.fn(), getByPersonId: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn() },
+}));
+
+jest.mock('../../../../data/repositories/TodoRepository', () => ({
   todoRepository: { getAll: jest.fn(), getByPersonId: jest.fn(), create: jest.fn(), toggleComplete: jest.fn(), remove: jest.fn() },
+}));
+
+jest.mock('../../../../data/repositories/ReminderRepository', () => ({
   reminderRepository: { getAll: jest.fn(), getByPersonId: jest.fn(), getUpcoming: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn() },
 }));
 
-const { taskRepository, todoRepository, reminderRepository } =
-  jest.requireMock('../../../../data/repositories/TaskRepository');
+const { taskRepository } = jest.requireMock('../../../../data/repositories/TaskRepository');
+const { todoRepository } = jest.requireMock('../../../../data/repositories/TodoRepository');
+const { reminderRepository } = jest.requireMock('../../../../data/repositories/ReminderRepository');
 
 const MOCK_TASK = {
   id: 't1', title: 'Buy milk', description: null, dueDate: null, dueTime: null,

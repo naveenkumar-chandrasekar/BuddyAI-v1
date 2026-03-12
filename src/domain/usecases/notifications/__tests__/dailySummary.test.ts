@@ -4,7 +4,13 @@ import { TaskStatus } from '../../../../shared/constants/taskStatus';
 
 jest.mock('../../../../data/repositories/TaskRepository', () => ({
   taskRepository: { getAll: jest.fn() },
+}));
+
+jest.mock('../../../../data/repositories/TodoRepository', () => ({
   todoRepository: { getAll: jest.fn() },
+}));
+
+jest.mock('../../../../data/repositories/ReminderRepository', () => ({
   reminderRepository: { getAll: jest.fn() },
 }));
 
@@ -12,8 +18,9 @@ jest.mock('../../../../data/repositories/PeopleRepository', () => ({
   personRepository: { getAll: jest.fn() },
 }));
 
-const { taskRepository, todoRepository, reminderRepository } =
-  jest.requireMock('../../../../data/repositories/TaskRepository');
+const { taskRepository } = jest.requireMock('../../../../data/repositories/TaskRepository');
+const { todoRepository } = jest.requireMock('../../../../data/repositories/TodoRepository');
+const { reminderRepository } = jest.requireMock('../../../../data/repositories/ReminderRepository');
 const { personRepository } =
   jest.requireMock('../../../../data/repositories/PeopleRepository');
 

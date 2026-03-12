@@ -1,7 +1,11 @@
-import { taskRepository, todoRepository, reminderRepository } from '../../../data/repositories/TaskRepository';
+import { taskRepository } from '../../../data/repositories/TaskRepository';
+import { todoRepository } from '../../../data/repositories/TodoRepository';
+import { reminderRepository } from '../../../data/repositories/ReminderRepository';
 import { personRepository } from '../../../data/repositories/PeopleRepository';
 import { TaskStatus } from '../../../shared/constants/taskStatus';
-import type { Task, Todo, Reminder } from '../../models/Task';
+import type { Task } from '../../models/Task';
+import type { Todo } from '../../models/Todo';
+import type { Reminder } from '../../models/Reminder';
 import type { Person } from '../../models/Person';
 
 export interface DailySummary {
