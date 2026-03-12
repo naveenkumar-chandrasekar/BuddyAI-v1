@@ -2,7 +2,7 @@ import { Q } from '@nozbe/watermelondb';
 import { getDb } from '../database/database';
 import PersonModel from '../database/models/PersonModel';
 import PersonConnectionModel from '../database/models/PersonConnectionModel';
-import type { IPeopleRepository } from '../../domain/repositories/IPeopleRepository';
+import type { IPersonRepository } from '../../domain/repositories/IPeopleRepository';
 import type { Person, CreatePersonInput, UpdatePersonInput } from '../../domain/models/Person';
 import type { PersonConnection, CreatePersonConnectionInput } from '../../domain/models/PersonConnection';
 import type { PriorityValue } from '../../shared/constants/priority';
@@ -24,18 +24,20 @@ function toPerson(m: PersonModel): Person {
     name: m.name,
     relationshipType: m.relationshipType as RelationshipTypeValue,
     customRelation: m.customRelation,
-    placeId: m.placeId,
     priority: m.priority as PriorityValue,
     birthday: m.birthday,
     phone: m.phone,
+    email: m.email,
     notes: m.notes,
+    lastContactedAt: m.lastContactedAt,
+    contactFrequency: m.contactFrequency,
     createdAt: m.createdAt.getTime(),
     updatedAt: m.updatedAt.getTime(),
   };
 }
 
-export class PeopleRepository implements IPeopleRepository {
-  private get collection() { return getDb().collections.get<PersonModel>('people'); }
+export class PersonRepository implements IPersonRepository {
+  private get collection() { return getDb().collections.get<PersonModel>('persons'); }
   private get connCollection() { return getDb().collections.get<PersonConnectionModel>('person_connections'); }
 
   async getAll(): Promise<Person[]> {
@@ -73,11 +75,13 @@ export class PeopleRepository implements IPeopleRepository {
         r.name = input.name;
         r.relationshipType = input.relationshipType;
         r.customRelation = input.customRelation ?? null;
-        r.placeId = input.placeId ?? null;
         r.priority = input.priority;
         r.birthday = input.birthday ?? null;
         r.phone = input.phone ?? null;
+        r.email = input.email ?? null;
         r.notes = input.notes ?? null;
+        r.lastContactedAt = input.lastContactedAt ?? null;
+        r.contactFrequency = input.contactFrequency ?? null;
         r.isDeleted = 0;
       }),
     );
@@ -91,11 +95,13 @@ export class PeopleRepository implements IPeopleRepository {
         if (input.name !== undefined) m.name = input.name;
         if (input.relationshipType !== undefined) m.relationshipType = input.relationshipType;
         if (input.customRelation !== undefined) m.customRelation = input.customRelation ?? null;
-        if (input.placeId !== undefined) m.placeId = input.placeId ?? null;
         if (input.priority !== undefined) m.priority = input.priority;
         if (input.birthday !== undefined) m.birthday = input.birthday ?? null;
         if (input.phone !== undefined) m.phone = input.phone ?? null;
+        if (input.email !== undefined) m.email = input.email ?? null;
         if (input.notes !== undefined) m.notes = input.notes ?? null;
+        if (input.lastContactedAt !== undefined) m.lastContactedAt = input.lastContactedAt ?? null;
+        if (input.contactFrequency !== undefined) m.contactFrequency = input.contactFrequency ?? null;
       });
       return r;
     });
@@ -136,4 +142,4 @@ export class PeopleRepository implements IPeopleRepository {
   }
 }
 
-export const peopleRepository = new PeopleRepository();
+export const personRepository = new PersonRepository();

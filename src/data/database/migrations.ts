@@ -1,4 +1,4 @@
-import { schemaMigrations, addColumns, createTable } from '@nozbe/watermelondb/Schema/migrations';
+import { schemaMigrations, addColumns, createTable, unsafeExecuteSql } from '@nozbe/watermelondb/Schema/migrations';
 
 export const migrations = schemaMigrations({
   migrations: [
@@ -25,6 +25,20 @@ export const migrations = schemaMigrations({
             { name: 'label', type: 'string' },
             { name: 'created_at', type: 'number' },
             { name: 'is_deleted', type: 'number' },
+          ],
+        }),
+      ],
+    },
+    {
+      toVersion: 4,
+      steps: [
+        unsafeExecuteSql('ALTER TABLE people RENAME TO persons;'),
+        addColumns({
+          table: 'persons',
+          columns: [
+            { name: 'email', type: 'string', isOptional: true },
+            { name: 'last_contacted_at', type: 'number', isOptional: true },
+            { name: 'contact_frequency', type: 'string', isOptional: true },
           ],
         }),
       ],

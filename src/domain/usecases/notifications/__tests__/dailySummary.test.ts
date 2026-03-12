@@ -9,12 +9,12 @@ jest.mock('../../../../data/repositories/TaskRepository', () => ({
 }));
 
 jest.mock('../../../../data/repositories/PeopleRepository', () => ({
-  peopleRepository: { getAll: jest.fn() },
+  personRepository: { getAll: jest.fn() },
 }));
 
 const { taskRepository, todoRepository, reminderRepository } =
   jest.requireMock('../../../../data/repositories/TaskRepository');
-const { peopleRepository } =
+const { personRepository } =
   jest.requireMock('../../../../data/repositories/PeopleRepository');
 
 function todayTs(offsetHours = 0): number {
@@ -51,7 +51,7 @@ describe('generateDailySummary', () => {
     taskRepository.getAll.mockResolvedValue([]);
     todoRepository.getAll.mockResolvedValue([]);
     reminderRepository.getAll.mockResolvedValue([]);
-    peopleRepository.getAll.mockResolvedValue([]);
+    personRepository.getAll.mockResolvedValue([]);
 
     const summary = await generateDailySummary();
 
@@ -69,7 +69,7 @@ describe('generateDailySummary', () => {
     taskRepository.getAll.mockResolvedValue([task]);
     todoRepository.getAll.mockResolvedValue([]);
     reminderRepository.getAll.mockResolvedValue([]);
-    peopleRepository.getAll.mockResolvedValue([]);
+    personRepository.getAll.mockResolvedValue([]);
 
     const summary = await generateDailySummary();
     expect(summary.todaysTasks).toHaveLength(1);
@@ -81,7 +81,7 @@ describe('generateDailySummary', () => {
     taskRepository.getAll.mockResolvedValue([task]);
     todoRepository.getAll.mockResolvedValue([]);
     reminderRepository.getAll.mockResolvedValue([]);
-    peopleRepository.getAll.mockResolvedValue([]);
+    personRepository.getAll.mockResolvedValue([]);
 
     const summary = await generateDailySummary();
     expect(summary.todaysTasks).toHaveLength(0);
@@ -93,7 +93,7 @@ describe('generateDailySummary', () => {
     taskRepository.getAll.mockResolvedValue([task]);
     todoRepository.getAll.mockResolvedValue([]);
     reminderRepository.getAll.mockResolvedValue([]);
-    peopleRepository.getAll.mockResolvedValue([]);
+    personRepository.getAll.mockResolvedValue([]);
 
     const summary = await generateDailySummary();
     expect(summary.todaysTasks).toHaveLength(0);
@@ -104,7 +104,7 @@ describe('generateDailySummary', () => {
     taskRepository.getAll.mockResolvedValue([]);
     todoRepository.getAll.mockResolvedValue([]);
     reminderRepository.getAll.mockResolvedValue([BASE_REMINDER]);
-    peopleRepository.getAll.mockResolvedValue([]);
+    personRepository.getAll.mockResolvedValue([]);
 
     const summary = await generateDailySummary();
     expect(summary.todaysReminders).toHaveLength(1);
@@ -115,7 +115,7 @@ describe('generateDailySummary', () => {
     taskRepository.getAll.mockResolvedValue([]);
     todoRepository.getAll.mockResolvedValue([]);
     reminderRepository.getAll.mockResolvedValue([reminder]);
-    peopleRepository.getAll.mockResolvedValue([]);
+    personRepository.getAll.mockResolvedValue([]);
 
     const summary = await generateDailySummary();
     expect(summary.todaysReminders).toHaveLength(0);
@@ -135,7 +135,7 @@ describe('generateDailySummary', () => {
     taskRepository.getAll.mockResolvedValue([]);
     todoRepository.getAll.mockResolvedValue([]);
     reminderRepository.getAll.mockResolvedValue([]);
-    peopleRepository.getAll.mockResolvedValue([person]);
+    personRepository.getAll.mockResolvedValue([person]);
 
     const summary = await generateDailySummary();
     expect(summary.upcomingBirthdays).toHaveLength(1);

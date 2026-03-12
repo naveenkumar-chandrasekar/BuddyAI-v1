@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, Searchbar, Chip, FAB, ActivityIndicator, Surface } from 'react-native-paper';
-import type { PeopleListScreenProps } from '../../../app/navigation/types';
-import { usePeopleStore } from '../store/peopleStore';
+import type { PersonListScreenProps } from '../../../app/navigation/types';
+import { usePersonStore } from '../../../features/people/store/peopleStore';
 import { RELATIONSHIP_LABELS, RelationshipType } from '../../../shared/constants/relationships';
 import { Priority } from '../../../shared/constants/priority';
 import type { Person } from '../../../domain/models/Person';
 
 const RELATION_COLORS: Record<string, string> = {
   family: '#E53935',
-  college: '#8E24AA',
+  friend: '#8E24AA',
   school: '#1E88E5',
-  office: '#43A047',
+  work: '#43A047',
   other: '#FB8C00',
   custom: '#00ACC1',
 };
@@ -45,9 +45,9 @@ function birthdayDaysLeft(birthday: string | null): number | null {
 const FILTERS = [
   { label: 'All', value: null },
   { label: 'Family', value: RelationshipType.FAMILY },
-  { label: 'College', value: RelationshipType.COLLEGE },
+  { label: 'Friend', value: RelationshipType.FRIEND },
   { label: 'School', value: RelationshipType.SCHOOL },
-  { label: 'Office', value: RelationshipType.OFFICE },
+  { label: 'Work', value: RelationshipType.WORK },
   { label: 'Other', value: RelationshipType.OTHER },
 ];
 
@@ -89,8 +89,8 @@ function PersonCard({ person, onPress }: { person: Person; onPress: () => void }
   );
 }
 
-export default function PeopleListScreen({ navigation }: PeopleListScreenProps) {
-  const { people, loading, loadPeople, searchPeople, filterByRelationship } = usePeopleStore();
+export default function PersonListScreen({ navigation }: PersonListScreenProps) {
+  const { people, loading, loadPeople, searchPeople, filterByRelationship } = usePersonStore();
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 

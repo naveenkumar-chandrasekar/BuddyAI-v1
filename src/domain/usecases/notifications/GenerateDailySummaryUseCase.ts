@@ -1,5 +1,5 @@
 import { taskRepository, todoRepository, reminderRepository } from '../../../data/repositories/TaskRepository';
-import { peopleRepository } from '../../../data/repositories/PeopleRepository';
+import { personRepository } from '../../../data/repositories/PeopleRepository';
 import { TaskStatus } from '../../../shared/constants/taskStatus';
 import type { Task, Todo, Reminder } from '../../models/Task';
 import type { Person } from '../../models/Person';
@@ -51,7 +51,7 @@ export async function generateDailySummary(): Promise<DailySummary> {
     taskRepository.getAll(),
     todoRepository.getAll(),
     reminderRepository.getAll(),
-    peopleRepository.getAll(),
+    personRepository.getAll(),
   ]);
 
   const todaysTasks = allTasks.filter(

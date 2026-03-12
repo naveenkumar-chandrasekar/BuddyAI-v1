@@ -1,7 +1,7 @@
 import { addPerson } from '../../domain/usecases/people/AddPersonUseCase';
 import { updatePerson } from '../../domain/usecases/people/UpdatePersonUseCase';
 import { deletePerson } from '../../domain/usecases/people/DeletePersonUseCase';
-import { peopleRepository } from '../../data/repositories/PeopleRepository';
+import { personRepository } from '../../data/repositories/PeopleRepository';
 import { addTask, addTodo, addReminder } from '../../domain/usecases/tasks/AddTaskUseCase';
 import { updateTask, toggleTodo } from '../../domain/usecases/tasks/UpdateTaskUseCase';
 import { deleteTask, deleteTodo, deleteReminder } from '../../domain/usecases/tasks/DeleteTaskUseCase';
@@ -24,15 +24,16 @@ function toPriority(val: unknown): typeof Priority[keyof typeof Priority] {
 }
 
 
-const VALID_RELATIONSHIP_TYPES = ['family', 'college', 'school', 'office', 'other', 'custom'];
+const VALID_RELATIONSHIP_TYPES = ['family', 'friend', 'work', 'school', 'other', 'custom'];
 
 function toRelationshipType(val: unknown): string {
   const s = String(val ?? '').toLowerCase();
   if (VALID_RELATIONSHIP_TYPES.includes(s)) return s;
   // Map common LLM synonyms to valid values
-  if (s === 'friend' || s === 'friends') return 'other';
-  if (s === 'colleague' || s === 'coworker' || s === 'work') return 'office';
-  if (s === 'classmate') return 'college';
+  if (s === 'college' || s === 'university') return 'friend';
+  if (s === 'colleague' || s === 'coworker' || s === 'office') return 'work';
+  if (s === 'classmate') return 'school';
+  if (s === 'friend' || s === 'friends' || s === 'buddy') return 'friend';
   return 'other';
 }
 
@@ -67,7 +68,7 @@ async function resolvePersonId(id: unknown, name: unknown): Promise<string | nul
   const s = String(id ?? '').trim();
   if (s && s !== 'PERSON_ID_FROM_CONTEXT') return s;
   if (!name) return null;
-  const results = await peopleRepository.search(String(name));
+  const results = await personRepository.search(String(name));
   return results[0]?.id ?? null;
 }
 
@@ -83,7 +84,6 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
           relationshipType: toRelationshipType(d.relationship_type) as never,
           priority: toPriority(d.priority),
           customRelation: d.custom_relation ? String(d.custom_relation) : undefined,
-          placeId: d.place_id ? String(d.place_id) : undefined,
           birthday: d.birthday ? String(d.birthday) : undefined,
           phone: d.phone ? String(d.phone) : undefined,
           notes: d.notes ? String(d.notes) : undefined,
@@ -117,12 +117,12 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
         const connLabel = String(d.label ?? 'connected').trim();
         if (!name1 || !name2) return { success: false, message: 'Both person names required' };
         const [res1, res2] = await Promise.all([
-          peopleRepository.search(name1),
-          peopleRepository.search(name2),
+          personRepository.search(name1),
+          personRepository.search(name2),
         ]);
         if (!res1.length) return { success: false, message: `Couldn't find "${name1}" in your people.` };
         if (!res2.length) return { success: false, message: `Couldn't find "${name2}" in your people.` };
-        await peopleRepository.addConnection({
+        await personRepository.addConnection({
           personId: res1[0].id,
           relatedPersonId: res2[0].id,
           label: connLabel,

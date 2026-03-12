@@ -6,7 +6,7 @@ const getTable = (name: string) => schema.tables[name as keyof typeof schema.tab
 
 const EXPECTED_TABLES = [
   'places',
-  'people',
+  'persons',
   'person_connections',
   'tasks',
   'todos',
@@ -26,8 +26,8 @@ describe('Database Schema', () => {
     expect(tableNames).toHaveLength(14);
   });
 
-  it('has schema version 3', () => {
-    expect(schema.version).toBe(3);
+  it('has schema version 4', () => {
+    expect(schema.version).toBe(4);
   });
 
   it.each(EXPECTED_TABLES)('includes table: %s', tableName => {
@@ -43,20 +43,23 @@ describe('Database Schema', () => {
     );
   });
 
-  describe('people table', () => {
-    const cols = getTable('people').columns;
+  describe('persons table', () => {
+    const cols = getTable('persons').columns;
 
     it.each([
-      'name', 'relationship_type', 'custom_relation', 'place_id', 'priority',
-      'birthday', 'phone', 'notes', 'created_at', 'updated_at', 'is_deleted',
+      'name', 'relationship_type', 'custom_relation', 'priority',
+      'birthday', 'phone', 'email', 'notes', 'last_contacted_at', 'contact_frequency',
+      'created_at', 'updated_at', 'is_deleted',
     ])('has column: %s', col => expect(cols[col]).toBeDefined());
 
     it('marks nullable fields as optional', () => {
       expect(cols.custom_relation.isOptional).toBe(true);
-      expect(cols.place_id.isOptional).toBe(true);
       expect(cols.birthday.isOptional).toBe(true);
       expect(cols.phone.isOptional).toBe(true);
+      expect(cols.email.isOptional).toBe(true);
       expect(cols.notes.isOptional).toBe(true);
+      expect(cols.last_contacted_at.isOptional).toBe(true);
+      expect(cols.contact_frequency.isOptional).toBe(true);
     });
   });
 

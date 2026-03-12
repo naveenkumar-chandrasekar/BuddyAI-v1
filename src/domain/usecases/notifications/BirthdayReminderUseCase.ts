@@ -1,4 +1,4 @@
-import { peopleRepository } from '../../../data/repositories/PeopleRepository';
+import { personRepository } from '../../../data/repositories/PeopleRepository';
 import {
   birthdayReminderRepository,
   notificationConfigRepository,
@@ -39,7 +39,7 @@ function getLeadDays(person: Person, config: {
 
 export async function populateBirthdayReminders(): Promise<void> {
   const [people, config] = await Promise.all([
-    peopleRepository.getAll(),
+    personRepository.getAll(),
     notificationConfigRepository.get(),
   ]);
 
@@ -79,7 +79,7 @@ export async function checkAndScheduleBirthdayReminders(): Promise<void> {
 
   for (const reminder of pending) {
     if (reminder.remindOn <= today) {
-      const person = await peopleRepository.getById(reminder.personId);
+      const person = await personRepository.getById(reminder.personId);
       if (person) {
         const remindOnDate = new Date(reminder.remindOn);
         await scheduleBirthdayNotification(person.name, person.id, remindOnDate);

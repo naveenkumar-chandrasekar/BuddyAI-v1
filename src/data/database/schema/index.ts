@@ -1,6 +1,6 @@
 import { appSchema } from '@nozbe/watermelondb';
 import { placesSchema } from './placesSchema';
-import { peopleSchema } from './peopleSchema';
+import { personsSchema } from './peopleSchema';
 import { personConnectionsSchema } from './personConnectionsSchema';
 import { tasksSchema, todosSchema, remindersSchema } from './tasksSchema';
 import {
@@ -14,10 +14,10 @@ import {
 import { notificationConfigSchema, birthdayRemindersSchema } from './notifSchema';
 
 export const schema = appSchema({
-  version: 3,
+  version: 4,
   tables: [
     placesSchema,
-    peopleSchema,
+    personsSchema,
     personConnectionsSchema,
     tasksSchema,
     todosSchema,

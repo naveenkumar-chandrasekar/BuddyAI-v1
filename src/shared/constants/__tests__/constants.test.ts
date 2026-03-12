@@ -21,9 +21,9 @@ describe('RelationshipType constants', () => {
   it('defines all 6 types', () => {
     const types = Object.values(RelationshipType);
     expect(types).toContain('family');
-    expect(types).toContain('college');
+    expect(types).toContain('friend');
+    expect(types).toContain('work');
     expect(types).toContain('school');
-    expect(types).toContain('office');
     expect(types).toContain('other');
     expect(types).toContain('custom');
   });

@@ -1,5 +1,5 @@
 import { taskRepository, todoRepository, reminderRepository } from '../../data/repositories/TaskRepository';
-import { peopleRepository } from '../../data/repositories/PeopleRepository';
+import { personRepository } from '../../data/repositories/PeopleRepository';
 import { TaskStatus } from '../../shared/constants/taskStatus';
 import { storage } from '../storage/mmkv';
 
@@ -127,7 +127,7 @@ export async function buildBirthdayMessage(): Promise<string> {
   const now = new Date();
   const nowMs = now.getTime();
 
-  const allPeople = await peopleRepository.getAll();
+  const allPeople = await personRepository.getAll();
   const upcoming = allPeople.filter(p => {
     if (!p.birthday) return false;
     const [, m, d] = p.birthday.split('-').map(Number);

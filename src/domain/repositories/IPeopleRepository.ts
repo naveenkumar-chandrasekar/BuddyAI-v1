@@ -1,6 +1,6 @@
 import type { Person, CreatePersonInput, UpdatePersonInput } from '../models/Person';
 
-export interface IPeopleRepository {
+export interface IPersonRepository {
   getAll(): Promise<Person[]>;
   getById(id: string): Promise<Person | null>;
   search(query: string): Promise<Person[]>;

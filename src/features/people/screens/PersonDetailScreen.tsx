@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, Linking } from 'react-native';
 import { Text, Button, Divider, ActivityIndicator, TextInput, Portal, Dialog, Chip } from 'react-native-paper';
 import type { PersonDetailScreenProps } from '../../../app/navigation/types';
-import { usePeopleStore } from '../store/peopleStore';
+import { usePersonStore } from '../../../features/people/store/peopleStore';
 import { getItemsByPerson } from '../../../domain/usecases/tasks/GetTasksUseCase';
 import { RELATIONSHIP_LABELS } from '../../../shared/constants/relationships';
 import { PRIORITY_LABELS, Priority } from '../../../shared/constants/priority';
 import type { Task, Todo, Reminder } from '../../../domain/models/Task';
 
 const RELATION_COLORS: Record<string, string> = {
-  family: '#E53935', college: '#8E24AA', school: '#1E88E5',
-  office: '#43A047', other: '#FB8C00', custom: '#00ACC1',
+  family: '#E53935', friend: '#8E24AA', school: '#1E88E5',
+  work: '#43A047', other: '#FB8C00', custom: '#00ACC1',
 };
 
 const PRIORITY_COLOR: Record<number, string> = {
@@ -35,7 +35,7 @@ function formatBirthday(birthday: string): string {
 
 export default function PersonDetailScreen({ navigation, route }: PersonDetailScreenProps) {
   const { personId } = route.params;
-  const { people, connections, deletePerson, loadPeople, loadConnections, addConnection, removeConnection } = usePeopleStore();
+  const { people, connections, deletePerson, loadPeople, loadConnections, addConnection, removeConnection } = usePersonStore();
   const person = people.find(p => p.id === personId);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);

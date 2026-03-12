@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, Platform } from 
 import { Button, Text, TextInput, SegmentedButtons, Chip } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { AddEditPersonScreenProps } from '../../../app/navigation/types';
-import { usePeopleStore } from '../store/peopleStore';
+import { usePersonStore } from '../../../features/people/store/peopleStore';
 import { Priority, PRIORITY_LABELS } from '../../../shared/constants/priority';
 import { RelationshipType, RELATIONSHIP_LABELS } from '../../../shared/constants/relationships';
 import type { PriorityValue } from '../../../shared/constants/priority';
@@ -11,18 +11,18 @@ import type { RelationshipTypeValue } from '../../../shared/constants/relationsh
 
 const RELATION_COLORS: Record<string, string> = {
   family: '#E53935',
-  college: '#8E24AA',
+  friend: '#8E24AA',
   school: '#1E88E5',
-  office: '#43A047',
+  work: '#43A047',
   other: '#FB8C00',
   custom: '#00ACC1',
 };
 
 const RELATION_ICONS: Record<string, string> = {
   family: '👨‍👩‍👧',
-  college: '🎓',
+  friend: '🎓',
   school: '🏫',
-  office: '💼',
+  work: '💼',
   other: '🤝',
   custom: '✏️',
 };
@@ -52,7 +52,7 @@ function dateToBirthdayString(d: Date): string {
 
 export default function AddEditPersonScreen({ navigation, route }: AddEditPersonScreenProps) {
   const { personId } = route.params ?? {};
-  const { people, addPerson, updatePerson } = usePeopleStore();
+  const { people, addPerson, updatePerson } = usePersonStore();
   const existing = personId ? people.find(p => p.id === personId) : undefined;
 
   const [name, setName] = useState(existing?.name ?? '');

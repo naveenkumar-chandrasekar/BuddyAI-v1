@@ -7,9 +7,9 @@ import { addPerson } from '../../../domain/usecases/people/AddPersonUseCase';
 import { updatePerson } from '../../../domain/usecases/people/UpdatePersonUseCase';
 import { deletePerson } from '../../../domain/usecases/people/DeletePersonUseCase';
 import { placesRepository } from '../../../data/repositories/PlacesRepository';
-import { peopleRepository } from '../../../data/repositories/PeopleRepository';
+import { personRepository } from '../../../data/repositories/PeopleRepository';
 
-interface PeopleState {
+interface PersonState {
   people: Person[];
   places: Place[];
   connections: PersonConnection[];
@@ -29,7 +29,7 @@ interface PeopleState {
   removeConnection(id: string): Promise<void>;
 }
 
-export const usePeopleStore = create<PeopleState>((set, _get) => ({
+export const usePersonStore = create<PersonState>((set, _get) => ({
   people: [],
   places: [],
   connections: [],
@@ -100,7 +100,7 @@ export const usePeopleStore = create<PeopleState>((set, _get) => ({
 
   async loadConnections(personId) {
     try {
-      const connections = await peopleRepository.getConnectionsForPerson(personId);
+      const connections = await personRepository.getConnectionsForPerson(personId);
       set({ connections });
     } catch (e) {
       set({ error: String(e) });
@@ -108,13 +108,13 @@ export const usePeopleStore = create<PeopleState>((set, _get) => ({
   },
 
   async addConnection(input) {
-    const conn = await peopleRepository.addConnection(input);
+    const conn = await personRepository.addConnection(input);
     set(s => ({ connections: [...s.connections, conn] }));
     return conn;
   },
 
   async removeConnection(id) {
-    await peopleRepository.removeConnection(id);
+    await personRepository.removeConnection(id);
     set(s => ({ connections: s.connections.filter(c => c.id !== id) }));
   },
 }));

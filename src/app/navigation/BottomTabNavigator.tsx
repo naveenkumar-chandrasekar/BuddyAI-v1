@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import type {
   MainTabParamList,
   ChatStackParamList,
-  PeopleStackParamList,
+  PersonStackParamList,
   TasksStackParamList,
   SettingsStackParamList,
 } from './types';
@@ -13,7 +13,7 @@ import type {
 import ChatHistoryScreen from '../../features/chat/screens/ChatHistoryScreen';
 import ChatScreen from '../../features/chat/screens/ChatScreen';
 
-import PeopleListScreen from '../../features/people/screens/PeopleListScreen';
+import PersonListScreen from '../../features/people/screens/PersonListScreen';
 import PersonDetailScreen from '../../features/people/screens/PersonDetailScreen';
 import AddEditPersonScreen from '../../features/people/screens/AddEditPersonScreen';
 
@@ -29,7 +29,7 @@ import LanguageSettingsScreen from '../../features/settings/screens/LanguageSett
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const ChatStack = createNativeStackNavigator<ChatStackParamList>();
-const PeopleStack = createNativeStackNavigator<PeopleStackParamList>();
+const PersonStack = createNativeStackNavigator<PersonStackParamList>();
 const TasksStack = createNativeStackNavigator<TasksStackParamList>();
 const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 
@@ -42,13 +42,13 @@ function ChatNavigator() {
   );
 }
 
-function PeopleNavigator() {
+function PersonNavigator() {
   return (
-    <PeopleStack.Navigator>
-      <PeopleStack.Screen name="PeopleList" component={PeopleListScreen} options={{ title: 'People' }} />
-      <PeopleStack.Screen name="PersonDetail" component={PersonDetailScreen} options={{ title: 'Person' }} />
-      <PeopleStack.Screen name="AddEditPerson" component={AddEditPersonScreen} options={{ title: 'Add Person' }} />
-    </PeopleStack.Navigator>
+    <PersonStack.Navigator>
+      <PersonStack.Screen name="PersonList" component={PersonListScreen} options={{ title: 'People' }} />
+      <PersonStack.Screen name="PersonDetail" component={PersonDetailScreen} options={{ title: 'Person' }} />
+      <PersonStack.Screen name="AddEditPerson" component={AddEditPersonScreen} options={{ title: 'Add Person' }} />
+    </PersonStack.Navigator>
   );
 }
 
@@ -85,8 +85,8 @@ export default function BottomTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="PeopleTab"
-        component={PeopleNavigator}
+        name="PersonTab"
+        component={PersonNavigator}
         options={{
           title: 'People',
           tabBarIcon: ({ color, size }) => <Icon name="account-group-outline" color={color} size={size} />,

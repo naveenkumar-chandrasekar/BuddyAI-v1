@@ -26,7 +26,7 @@ export type OnboardingStackParamList = {
 
 export type MainTabParamList = {
   ChatTab: undefined;
-  PeopleTab: undefined;
+  PersonTab: undefined;
   TasksTab: undefined;
   SettingsTab: undefined;
 };
@@ -40,8 +40,8 @@ export type ChatStackParamList = {
 
 // ─── People Stack ─────────────────────────────────────────────────────────────
 
-export type PeopleStackParamList = {
-  PeopleList: undefined;
+export type PersonStackParamList = {
+  PersonList: undefined;
   PersonDetail: { personId: string };
   AddEditPerson: { personId?: string };
 };
@@ -81,18 +81,18 @@ export type ChatScreenProps = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList>
 >;
 
-export type PeopleListScreenProps = CompositeScreenProps<
-  NativeStackScreenProps<PeopleStackParamList, 'PeopleList'>,
+export type PersonListScreenProps = CompositeScreenProps<
+  NativeStackScreenProps<PersonStackParamList, 'PersonList'>,
   BottomTabScreenProps<MainTabParamList>
 >;
 
 export type PersonDetailScreenProps = CompositeScreenProps<
-  NativeStackScreenProps<PeopleStackParamList, 'PersonDetail'>,
+  NativeStackScreenProps<PersonStackParamList, 'PersonDetail'>,
   BottomTabScreenProps<MainTabParamList>
 >;
 
 export type AddEditPersonScreenProps = CompositeScreenProps<
-  NativeStackScreenProps<PeopleStackParamList, 'AddEditPerson'>,
+  NativeStackScreenProps<PersonStackParamList, 'AddEditPerson'>,
   BottomTabScreenProps<MainTabParamList>
 >;
 

@@ -24,10 +24,10 @@ const RELATIONSHIP_MAP: Record<string, string> = {
   family: 'family', mom: 'family', dad: 'family', mother: 'family', father: 'family',
   brother: 'family', sister: 'family', wife: 'family', husband: 'family',
   son: 'family', daughter: 'family', uncle: 'family', aunt: 'family', cousin: 'family',
-  college: 'college', university: 'college',
+  college: 'friend', university: 'friend',
   school: 'school', classmate: 'school',
-  office: 'office', work: 'office', colleague: 'office', coworker: 'office',
-  boss: 'office', manager: 'office', employee: 'office',
+  office: 'work', work: 'work', colleague: 'work', coworker: 'work',
+  boss: 'work', manager: 'work', employee: 'work',
   friend: 'other', buddy: 'other', neighbor: 'other', neighbour: 'other',
   other: 'other', custom: 'custom',
 };
@@ -55,7 +55,7 @@ function askQuestion(pa: PendingAction): string {
     case 'CREATE_PERSON':
       return pa.step === 'name'
         ? "What's the person's name?"
-        : `Got it! What's ${String(pa.data.name)}'s relationship?\n(family / college / school / office / other)`;
+        : `Got it! What's ${String(pa.data.name)}'s relationship?\n(family / friend / work / school / other)`;
     case 'CREATE_TASK':
       return pa.step === 'title'
         ? "What's the task?"
@@ -97,7 +97,7 @@ async function resolvePending(
       pending = pa;
       return chatMessageRepository.create({
         sessionId, sender: 'ai',
-        message: "Please say one of: family, college, school, office, other",
+        message: "Please say one of: family, friend, work, school, other",
         messageType: 'text',
       });
     }

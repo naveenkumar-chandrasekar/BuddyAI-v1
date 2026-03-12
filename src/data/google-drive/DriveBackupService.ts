@@ -5,7 +5,7 @@ import { uploadFile, downloadFile } from './GoogleDriveService';
 
 const TABLES = [
   'places',
-  'people',
+  'persons',
   'tasks',
   'todos',
   'reminders',

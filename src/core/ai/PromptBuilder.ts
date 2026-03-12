@@ -1,5 +1,5 @@
 import { taskRepository, todoRepository, reminderRepository } from '../../data/repositories/TaskRepository';
-import { peopleRepository } from '../../data/repositories/PeopleRepository';
+import { personRepository } from '../../data/repositories/PeopleRepository';
 import { chatMessageRepository } from '../../data/repositories/ChatRepository';
 import { TaskStatus } from '../../shared/constants/taskStatus';
 import { PRIORITY_LABELS } from '../../shared/constants/priority';
@@ -20,7 +20,7 @@ Rules:
 - NEVER output due_date or remind_at — the app parses dates itself
 - For CREATE_TASK and CREATE_TODO: output only title and priority
 - For CREATE_REMINDER: output only title and priority
-- For CREATE_PERSON: output name and relationship_type (family|college|school|office|other|custom)
+- For CREATE_PERSON: output name and relationship_type (family|friend|work|school|other|custom)
 - For CREATE_CONNECTION: output person1_name, person2_name, label
 - For COMPLETE_TASK/COMPLETE_TODO/DELETE_*/UPDATE_*: output both id from context AND title/name so the app can find the item even if id is wrong
 - priority: 1=high 2=medium 3=low (default 2)
@@ -97,7 +97,7 @@ export async function buildPrompt(
   const nowMs = now.getTime();
 
   const [allPeople, allTasks, allTodos, allReminders, recentMessages] = await Promise.all([
-    peopleRepository.getAll(),
+    personRepository.getAll(),
     taskRepository.getAll(),
     todoRepository.getAll(),
     reminderRepository.getAll(),
@@ -203,7 +203,7 @@ export async function buildDailySummaryPrompt(): Promise<string> {
     taskRepository.getAll(),
     todoRepository.getAll(),
     reminderRepository.getAll(),
-    peopleRepository.getAll(),
+    personRepository.getAll(),
   ]);
 
   const todayTasks = allTasks.filter(

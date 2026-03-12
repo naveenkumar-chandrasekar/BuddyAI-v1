@@ -12,7 +12,7 @@ describe('Database', () => {
   it('has a collection for every entity table', () => {
     const expectedTables = [
       'places',
-      'people',
+      'persons',
       'tasks',
       'todos',
       'reminders',
