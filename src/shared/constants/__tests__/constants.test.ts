@@ -50,11 +50,12 @@ describe('PlaceType constants', () => {
 });
 
 describe('TaskStatus constants', () => {
-  it('defines 5 statuses', () => {
+  it('defines 6 statuses', () => {
     const statuses = Object.values(TaskStatus);
-    expect(statuses).toHaveLength(5);
+    expect(statuses).toHaveLength(6);
     expect(statuses).toContain('pending');
     expect(statuses).toContain('done');
+    expect(statuses).toContain('cancelled');
     expect(statuses).toContain('missed');
   });
 });

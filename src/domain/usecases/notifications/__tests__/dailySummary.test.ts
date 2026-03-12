@@ -39,7 +39,8 @@ function todayStartTs(): number {
 const BASE_TASK = {
   id: 't1', title: 'Task', description: null, dueDate: null, dueTime: null,
   priority: Priority.MEDIUM, status: TaskStatus.PENDING, personId: null,
-  relationType: null, isMissed: false, missedAt: null, nextRemindAt: null,
+  relationType: null, tags: null, estimatedMinutes: null,
+  isRecurring: false, recurrence: null, isMissed: false, missedAt: null, nextRemindAt: null,
   remindCount: 0, isDismissed: false, createdAt: 1000, updatedAt: 1000, completedAt: null,
 };
 

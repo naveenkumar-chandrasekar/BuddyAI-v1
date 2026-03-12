@@ -43,5 +43,19 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 5,
+      steps: [
+        addColumns({
+          table: 'tasks',
+          columns: [
+            { name: 'tags', type: 'string', isOptional: true },
+            { name: 'estimated_minutes', type: 'number', isOptional: true },
+            { name: 'is_recurring', type: 'number' },
+            { name: 'recurrence', type: 'string', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

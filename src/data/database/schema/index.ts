@@ -16,7 +16,7 @@ import {
 import { notificationConfigSchema, birthdayRemindersSchema } from './notifSchema';
 
 export const schema = appSchema({
-  version: 4,
+  version: 5,
   tables: [
     placesSchema,
     personsSchema,

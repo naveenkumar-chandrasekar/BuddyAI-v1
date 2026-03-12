@@ -12,6 +12,10 @@ export default class TaskModel extends Model {
   @field('status') status!: string;
   @field('person_id') personId!: string | null;
   @field('relation_type') relationType!: string | null;
+  @field('tags') tags!: string | null;
+  @field('estimated_minutes') estimatedMinutes!: number | null;
+  @field('is_recurring') isRecurring!: number;
+  @field('recurrence') recurrence!: string | null;
   @field('is_missed') isMissed!: number;
   @field('missed_at') missedAt!: number | null;
   @field('next_remind_at') nextRemindAt!: number | null;

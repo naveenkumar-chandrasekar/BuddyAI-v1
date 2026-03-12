@@ -29,7 +29,9 @@ const { reminderRepository } = jest.requireMock('../../../../data/repositories/R
 const MOCK_TASK = {
   id: 't1', title: 'Buy milk', description: null, dueDate: null, dueTime: null,
   priority: Priority.MEDIUM, status: TaskStatus.PENDING, personId: null,
-  relationType: null, isMissed: false, remindCount: 0, isDismissed: false,
+  relationType: null, tags: null, estimatedMinutes: null,
+  isRecurring: false, recurrence: null,
+  isMissed: false, missedAt: null, nextRemindAt: null, remindCount: 0, isDismissed: false,
   createdAt: 1000, updatedAt: 1000, completedAt: null,
 };
 

@@ -18,6 +18,10 @@ function toTask(m: TaskModel): Task {
     status: m.status as TaskStatusValue,
     personId: m.personId,
     relationType: m.relationType,
+    tags: m.tags,
+    estimatedMinutes: m.estimatedMinutes,
+    isRecurring: m.isRecurring === 1,
+    recurrence: m.recurrence,
     isMissed: m.isMissed === 1,
     missedAt: m.missedAt,
     nextRemindAt: m.nextRemindAt,
@@ -51,6 +55,49 @@ export class TaskRepository implements ITaskRepository {
     return records.map(toTask);
   }
 
+  async getByStatus(status: TaskStatusValue): Promise<Task[]> {
+    const records = await this.collection
+      .query(Q.where('is_deleted', 0), Q.where('status', status))
+      .fetch();
+    return records.map(toTask);
+  }
+
+  async getOverdue(): Promise<Task[]> {
+    const now = Date.now();
+    const records = await this.collection
+      .query(
+        Q.where('is_deleted', 0),
+        Q.where('due_date', Q.notEq(null)),
+        Q.where('due_date', Q.lt(now)),
+        Q.where('status', Q.notEq(TaskStatus.DONE)),
+        Q.where('status', Q.notEq(TaskStatus.CANCELLED)),
+      )
+      .fetch();
+    return records.map(toTask);
+  }
+
+  async getMissed(): Promise<Task[]> {
+    const records = await this.collection
+      .query(
+        Q.where('is_deleted', 0),
+        Q.where('is_missed', 1),
+        Q.where('is_dismissed', 0),
+      )
+      .fetch();
+    return records.map(toTask);
+  }
+
+  async search(query: string): Promise<Task[]> {
+    const q = query.toLowerCase();
+    const records = await this.collection.query(Q.where('is_deleted', 0)).fetch();
+    return records
+      .filter(r =>
+        r.title.toLowerCase().includes(q) ||
+        (r.description ?? '').toLowerCase().includes(q),
+      )
+      .map(toTask);
+  }
+
   async create(input: CreateTaskInput): Promise<Task> {
     const record = await getDb().write(async () =>
       this.collection.create(r => {
@@ -62,6 +109,10 @@ export class TaskRepository implements ITaskRepository {
         r.status = TaskStatus.PENDING;
         r.personId = input.personId ?? null;
         r.relationType = input.relationType ?? null;
+        r.tags = input.tags ?? null;
+        r.estimatedMinutes = input.estimatedMinutes ?? null;
+        r.isRecurring = input.isRecurring ? 1 : 0;
+        r.recurrence = input.recurrence ?? null;
         r.isMissed = 0;
         r.missedAt = null;
         r.nextRemindAt = null;
@@ -85,6 +136,10 @@ export class TaskRepository implements ITaskRepository {
         if (input.status !== undefined) m.status = input.status;
         if (input.personId !== undefined) m.personId = input.personId ?? null;
         if (input.relationType !== undefined) m.relationType = input.relationType ?? null;
+        if (input.tags !== undefined) m.tags = input.tags ?? null;
+        if (input.estimatedMinutes !== undefined) m.estimatedMinutes = input.estimatedMinutes ?? null;
+        if (input.isRecurring !== undefined) m.isRecurring = input.isRecurring ? 1 : 0;
+        if (input.recurrence !== undefined) m.recurrence = input.recurrence ?? null;
         if (input.isMissed !== undefined) m.isMissed = input.isMissed ? 1 : 0;
         if (input.missedAt !== undefined) m.missedAt = input.missedAt ?? null;
         if (input.nextRemindAt !== undefined) m.nextRemindAt = input.nextRemindAt ?? null;

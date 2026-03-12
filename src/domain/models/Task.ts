@@ -11,6 +11,10 @@ export interface Task {
   status: TaskStatusValue;
   personId: string | null;
   relationType: string | null;
+  tags: string | null;
+  estimatedMinutes: number | null;
+  isRecurring: boolean;
+  recurrence: string | null;
   isMissed: boolean;
   missedAt: number | null;
   nextRemindAt: number | null;
@@ -29,6 +33,10 @@ export interface CreateTaskInput {
   priority: PriorityValue;
   personId?: string;
   relationType?: string;
+  tags?: string;
+  estimatedMinutes?: number;
+  isRecurring?: boolean;
+  recurrence?: string;
 }
 
 export type UpdateTaskInput = Partial<CreateTaskInput> & {
