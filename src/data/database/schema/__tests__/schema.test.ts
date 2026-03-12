@@ -10,6 +10,7 @@ const EXPECTED_TABLES = [
   'person_connections',
   'tasks',
   'todos',
+  'todo_items',
   'reminders',
   'chat_sessions',
   'chat_messages',
@@ -22,12 +23,12 @@ const EXPECTED_TABLES = [
 ];
 
 describe('Database Schema', () => {
-  it('defines exactly 14 tables', () => {
-    expect(tableNames).toHaveLength(14);
+  it('defines exactly 15 tables', () => {
+    expect(tableNames).toHaveLength(15);
   });
 
-  it('has schema version 6', () => {
-    expect(schema.version).toBe(6);
+  it('has schema version 7', () => {
+    expect(schema.version).toBe(7);
   });
 
   it.each(EXPECTED_TABLES)('includes table: %s', tableName => {
@@ -84,6 +85,20 @@ describe('Database Schema', () => {
       'is_missed', 'missed_at', 'next_remind_at', 'remind_count',
       'is_dismissed', 'dismissed_at', 'created_at', 'updated_at', 'completed_at', 'is_deleted',
     ])('has column: %s', col => expect(cols[col]).toBeDefined());
+  });
+
+  describe('todo_items table', () => {
+    const cols = getTable('todo_items').columns;
+
+    it.each([
+      'todo_id', 'title', 'is_completed', 'position',
+      'person_id', 'relation_type',
+      'completed_at', 'created_at', 'updated_at', 'is_deleted',
+    ])('has column: %s', col => expect(cols[col]).toBeDefined());
+
+    it('indexes todo_id', () => {
+      expect(cols.todo_id.isIndexed).toBe(true);
+    });
   });
 
   describe('reminders table', () => {

@@ -14,15 +14,17 @@ import {
   chatSessionRemindersSchema,
 } from './chatSchema';
 import { notificationConfigSchema, birthdayRemindersSchema } from './notifSchema';
+import { todoItemsSchema } from './todoItemSchema';
 
 export const schema = appSchema({
-  version: 6,
+  version: 7,
   tables: [
     placesSchema,
     personsSchema,
     personConnectionsSchema,
     tasksSchema,
     todosSchema,
+    todoItemsSchema,
     remindersSchema,
     chatSessionsSchema,
     chatMessagesSchema,
