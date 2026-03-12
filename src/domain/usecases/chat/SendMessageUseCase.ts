@@ -232,8 +232,11 @@ export async function sendMessage(
     // ── CREATE_PERSON ────────────────────────────────────────────────────────
     if (intent.action === 'CREATE_PERSON') {
       const name = String(intent.data.name ?? '').trim();
-      if (!name) {
-        const aiMessage = await storePending(sessionId, { action: 'CREATE_PERSON', step: 'name', data: intent.data });
+      // Reject if name is empty OR if the LLM hallucinated it from context
+      // (i.e. the name doesn't actually appear in what the user typed)
+      const nameInMessage = name && userText.toLowerCase().includes(name.toLowerCase());
+      if (!name || !nameInMessage) {
+        const aiMessage = await storePending(sessionId, { action: 'CREATE_PERSON', step: 'name', data: {} });
         return { userMessage, aiMessage };
       }
       const detectedRel = extractRelationship(userText);
@@ -248,8 +251,9 @@ export async function sendMessage(
     // ── CREATE_TASK ──────────────────────────────────────────────────────────
     if (intent.action === 'CREATE_TASK') {
       const title = String(intent.data.title ?? '').trim();
-      if (!title) {
-        const aiMessage = await storePending(sessionId, { action: 'CREATE_TASK', step: 'title', data: intent.data });
+      const titleInMsg = title && userText.toLowerCase().includes(title.toLowerCase());
+      if (!title || !titleInMsg) {
+        const aiMessage = await storePending(sessionId, { action: 'CREATE_TASK', step: 'title', data: {} });
         return { userMessage, aiMessage };
       }
       const parsedDate = parseDate(userText);
@@ -264,8 +268,9 @@ export async function sendMessage(
     // ── CREATE_TODO ──────────────────────────────────────────────────────────
     if (intent.action === 'CREATE_TODO') {
       const title = String(intent.data.title ?? '').trim();
-      if (!title) {
-        const aiMessage = await storePending(sessionId, { action: 'CREATE_TODO', step: 'title', data: intent.data });
+      const titleInMsg = title && userText.toLowerCase().includes(title.toLowerCase());
+      if (!title || !titleInMsg) {
+        const aiMessage = await storePending(sessionId, { action: 'CREATE_TODO', step: 'title', data: {} });
         return { userMessage, aiMessage };
       }
       const parsedDate = parseDate(userText);
@@ -280,8 +285,9 @@ export async function sendMessage(
     // ── CREATE_REMINDER ──────────────────────────────────────────────────────
     if (intent.action === 'CREATE_REMINDER') {
       const title = String(intent.data.title ?? '').trim();
-      if (!title) {
-        const aiMessage = await storePending(sessionId, { action: 'CREATE_REMINDER', step: 'title', data: intent.data });
+      const titleInMsg = title && userText.toLowerCase().includes(title.toLowerCase());
+      if (!title || !titleInMsg) {
+        const aiMessage = await storePending(sessionId, { action: 'CREATE_REMINDER', step: 'title', data: {} });
         return { userMessage, aiMessage };
       }
       const parsedDate = parseDate(userText);
