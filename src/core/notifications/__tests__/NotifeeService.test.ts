@@ -68,7 +68,7 @@ describe('NotifeeService', () => {
       const reminder = {
         id: 'r1', title: 'Call dentist', description: 'Important',
         remindAt: Date.now() + 3600000, isRecurring: false, recurrence: null,
-        isDone: false, personId: null, relationType: null, priority: 1 as const,
+        isDone: false, personId: null, relationType: null, priority: 1 as const, tags: null, snoozeUntil: null,
         isMissed: false, missedAt: null, nextRemindAt: null, remindCount: 0,
         isDismissed: false, createdAt: 1000, updatedAt: 1000,
       };
@@ -83,7 +83,7 @@ describe('NotifeeService', () => {
       const reminder = {
         id: 'r2', title: 'Old reminder', description: null,
         remindAt: Date.now() - 1000, isRecurring: false, recurrence: null,
-        isDone: false, personId: null, relationType: null, priority: 2 as const,
+        isDone: false, personId: null, relationType: null, priority: 2 as const, tags: null, snoozeUntil: null,
         isMissed: false, missedAt: null, nextRemindAt: null, remindCount: 0,
         isDismissed: false, createdAt: 1000, updatedAt: 1000,
       };

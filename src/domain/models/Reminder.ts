@@ -11,6 +11,8 @@ export interface Reminder {
   personId: string | null;
   relationType: string | null;
   priority: PriorityValue;
+  tags: string | null;
+  snoozeUntil: number | null;
   isMissed: boolean;
   missedAt: number | null;
   nextRemindAt: number | null;
@@ -29,10 +31,12 @@ export interface CreateReminderInput {
   personId?: string;
   relationType?: string;
   priority: PriorityValue;
+  tags?: string;
 }
 
 export type UpdateReminderInput = Partial<CreateReminderInput> & {
   isDone?: boolean;
+  snoozeUntil?: number | null;
   isMissed?: boolean;
   missedAt?: number | null;
   nextRemindAt?: number | null;

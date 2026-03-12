@@ -17,7 +17,7 @@ import { notificationConfigSchema, birthdayRemindersSchema } from './notifSchema
 import { todoItemsSchema } from './todoItemSchema';
 
 export const schema = appSchema({
-  version: 7,
+  version: 8,
   tables: [
     placesSchema,
     personsSchema,

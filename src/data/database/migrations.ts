@@ -90,5 +90,17 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 8,
+      steps: [
+        addColumns({
+          table: 'reminders',
+          columns: [
+            { name: 'tags', type: 'string', isOptional: true },
+            { name: 'snooze_until', type: 'number', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

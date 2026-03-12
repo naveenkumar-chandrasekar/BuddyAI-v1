@@ -13,6 +13,8 @@ export default class ReminderModel extends Model {
   @field('person_id') personId!: string | null;
   @field('relation_type') relationType!: string | null;
   @field('priority') priority!: number;
+  @field('tags') tags!: string | null;
+  @field('snooze_until') snoozeUntil!: number | null;
   @field('is_missed') isMissed!: number;
   @field('missed_at') missedAt!: number | null;
   @field('next_remind_at') nextRemindAt!: number | null;

@@ -47,9 +47,9 @@ const BASE_TASK = {
 const BASE_REMINDER = {
   id: 'r1', title: 'Reminder', description: null, remindAt: todayTs(),
   isRecurring: false, recurrence: null, isDone: false, personId: null,
-  relationType: null, priority: Priority.HIGH, isMissed: false,
-  missedAt: null, nextRemindAt: null, remindCount: 0, isDismissed: false,
-  createdAt: 1000, updatedAt: 1000,
+  relationType: null, priority: Priority.HIGH, tags: null, snoozeUntil: null,
+  isMissed: false, missedAt: null, nextRemindAt: null, remindCount: 0,
+  isDismissed: false, createdAt: 1000, updatedAt: 1000,
 };
 
 describe('generateDailySummary', () => {

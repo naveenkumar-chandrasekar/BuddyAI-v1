@@ -17,6 +17,8 @@ function toReminder(m: ReminderModel): Reminder {
     personId: m.personId,
     relationType: m.relationType,
     priority: m.priority as PriorityValue,
+    tags: m.tags,
+    snoozeUntil: m.snoozeUntil,
     isMissed: m.isMissed === 1,
     missedAt: m.missedAt,
     nextRemindAt: m.nextRemindAt,
@@ -49,12 +51,52 @@ export class ReminderRepository implements IReminderRepository {
     return records.map(toReminder);
   }
 
-  async getUpcoming(): Promise<Reminder[]> {
+  async getUpcoming(withinMs?: number): Promise<Reminder[]> {
+    const now = Date.now();
+    const conditions = [
+      Q.where('is_deleted', 0),
+      Q.where('is_done', 0),
+      Q.where('remind_at', Q.gte(now)),
+    ];
+    if (withinMs !== undefined) {
+      conditions.push(Q.where('remind_at', Q.lte(now + withinMs)));
+    }
+    const records = await this.collection.query(...conditions).fetch();
+    return records.map(toReminder);
+  }
+
+  async getOverdue(): Promise<Reminder[]> {
     const now = Date.now();
     const records = await this.collection
-      .query(Q.where('is_deleted', 0), Q.where('is_done', 0), Q.where('remind_at', Q.gte(now)))
+      .query(
+        Q.where('is_deleted', 0),
+        Q.where('is_done', 0),
+        Q.where('remind_at', Q.lt(now)),
+      )
       .fetch();
     return records.map(toReminder);
+  }
+
+  async getMissed(): Promise<Reminder[]> {
+    const records = await this.collection
+      .query(
+        Q.where('is_deleted', 0),
+        Q.where('is_missed', 1),
+        Q.where('is_dismissed', 0),
+      )
+      .fetch();
+    return records.map(toReminder);
+  }
+
+  async search(query: string): Promise<Reminder[]> {
+    const q = query.toLowerCase();
+    const records = await this.collection.query(Q.where('is_deleted', 0)).fetch();
+    return records
+      .filter(r =>
+        r.title.toLowerCase().includes(q) ||
+        (r.description ?? '').toLowerCase().includes(q),
+      )
+      .map(toReminder);
   }
 
   async create(input: CreateReminderInput): Promise<Reminder> {
@@ -69,6 +111,8 @@ export class ReminderRepository implements IReminderRepository {
         r.personId = input.personId ?? null;
         r.relationType = input.relationType ?? null;
         r.priority = input.priority;
+        r.tags = input.tags ?? null;
+        r.snoozeUntil = null;
         r.isMissed = 0;
         r.missedAt = null;
         r.nextRemindAt = null;
@@ -93,6 +137,8 @@ export class ReminderRepository implements IReminderRepository {
         if (input.personId !== undefined) m.personId = input.personId ?? null;
         if (input.relationType !== undefined) m.relationType = input.relationType ?? null;
         if (input.priority !== undefined) m.priority = input.priority;
+        if (input.tags !== undefined) m.tags = input.tags ?? null;
+        if (input.snoozeUntil !== undefined) m.snoozeUntil = input.snoozeUntil ?? null;
         if (input.isMissed !== undefined) m.isMissed = input.isMissed ? 1 : 0;
         if (input.missedAt !== undefined) m.missedAt = input.missedAt ?? null;
         if (input.nextRemindAt !== undefined) m.nextRemindAt = input.nextRemindAt ?? null;

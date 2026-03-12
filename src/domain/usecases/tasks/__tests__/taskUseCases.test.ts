@@ -46,7 +46,7 @@ const MOCK_TODO = {
 const MOCK_REMINDER = {
   id: 'r1', title: 'Call dentist', description: null, remindAt: 9999999999,
   isRecurring: false, recurrence: null, isDone: false, personId: null,
-  relationType: null, priority: Priority.HIGH, isMissed: false,
+  relationType: null, priority: Priority.HIGH, tags: null, snoozeUntil: null, isMissed: false, missedAt: null, nextRemindAt: null,
   remindCount: 0, isDismissed: false, createdAt: 1000, updatedAt: 1000,
 };
 

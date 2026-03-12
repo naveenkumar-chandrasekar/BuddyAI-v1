@@ -27,8 +27,8 @@ describe('Database Schema', () => {
     expect(tableNames).toHaveLength(15);
   });
 
-  it('has schema version 7', () => {
-    expect(schema.version).toBe(7);
+  it('has schema version 8', () => {
+    expect(schema.version).toBe(8);
   });
 
   it.each(EXPECTED_TABLES)('includes table: %s', tableName => {
@@ -106,8 +106,8 @@ describe('Database Schema', () => {
 
     it.each([
       'title', 'description', 'remind_at', 'is_recurring', 'recurrence',
-      'is_done', 'person_id', 'relation_type', 'priority', 'is_missed',
-      'missed_at', 'next_remind_at', 'remind_count', 'is_dismissed',
+      'is_done', 'person_id', 'relation_type', 'priority', 'tags', 'snooze_until',
+      'is_missed', 'missed_at', 'next_remind_at', 'remind_count', 'is_dismissed',
       'dismissed_at', 'created_at', 'updated_at', 'is_deleted',
     ])('has column: %s', col => expect(cols[col]).toBeDefined());
   });
