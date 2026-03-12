@@ -36,8 +36,9 @@ const MOCK_TASK = {
 };
 
 const MOCK_TODO = {
-  id: 'td1', title: 'Read book', isCompleted: false, priority: Priority.LOW,
-  personId: null, relationType: null, dueDate: null, isRecurring: false, recurrence: null,
+  id: 'td1', title: 'Read book', description: null, isCompleted: false, priority: Priority.LOW,
+  personId: null, relationType: null, tags: null, estimatedMinutes: null,
+  dueDate: null, isRecurring: false, recurrence: null,
   isMissed: false, missedAt: null, nextRemindAt: null, remindCount: 0,
   isDismissed: false, createdAt: 1000, updatedAt: 1000, completedAt: null,
 };

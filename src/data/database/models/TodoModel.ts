@@ -5,10 +5,13 @@ export default class TodoModel extends Model {
   static table = 'todos';
 
   @field('title') title!: string;
+  @field('description') description!: string | null;
   @field('is_completed') isCompleted!: number;
   @field('priority') priority!: number;
   @field('person_id') personId!: string | null;
   @field('relation_type') relationType!: string | null;
+  @field('tags') tags!: string | null;
+  @field('estimated_minutes') estimatedMinutes!: number | null;
   @field('due_date') dueDate!: number | null;
   @field('is_recurring') isRecurring!: number;
   @field('recurrence') recurrence!: string | null;

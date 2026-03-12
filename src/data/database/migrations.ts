@@ -57,5 +57,18 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 6,
+      steps: [
+        addColumns({
+          table: 'todos',
+          columns: [
+            { name: 'description', type: 'string', isOptional: true },
+            { name: 'tags', type: 'string', isOptional: true },
+            { name: 'estimated_minutes', type: 'number', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

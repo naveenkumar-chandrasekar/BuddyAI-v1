@@ -9,10 +9,13 @@ function toTodo(m: TodoModel): Todo {
   return {
     id: m.id,
     title: m.title,
+    description: m.description,
     isCompleted: m.isCompleted === 1,
     priority: m.priority as PriorityValue,
     personId: m.personId,
     relationType: m.relationType,
+    tags: m.tags,
+    estimatedMinutes: m.estimatedMinutes,
     dueDate: m.dueDate,
     isRecurring: m.isRecurring === 1,
     recurrence: m.recurrence,
@@ -49,14 +52,66 @@ export class TodoRepository implements ITodoRepository {
     return records.map(toTodo);
   }
 
+  async getPending(): Promise<Todo[]> {
+    const records = await this.collection
+      .query(Q.where('is_deleted', 0), Q.where('is_completed', 0))
+      .fetch();
+    return records.map(toTodo);
+  }
+
+  async getCompleted(): Promise<Todo[]> {
+    const records = await this.collection
+      .query(Q.where('is_deleted', 0), Q.where('is_completed', 1))
+      .fetch();
+    return records.map(toTodo);
+  }
+
+  async getOverdue(): Promise<Todo[]> {
+    const now = Date.now();
+    const records = await this.collection
+      .query(
+        Q.where('is_deleted', 0),
+        Q.where('is_completed', 0),
+        Q.where('due_date', Q.notEq(null)),
+        Q.where('due_date', Q.lt(now)),
+      )
+      .fetch();
+    return records.map(toTodo);
+  }
+
+  async getMissed(): Promise<Todo[]> {
+    const records = await this.collection
+      .query(
+        Q.where('is_deleted', 0),
+        Q.where('is_missed', 1),
+        Q.where('is_dismissed', 0),
+      )
+      .fetch();
+    return records.map(toTodo);
+  }
+
+  async search(query: string): Promise<Todo[]> {
+    const q = query.toLowerCase();
+    const records = await this.collection.query(Q.where('is_deleted', 0)).fetch();
+    return records
+      .filter(r =>
+        r.title.toLowerCase().includes(q) ||
+        (r.description ?? '').toLowerCase().includes(q),
+      )
+      .map(toTodo);
+  }
+
   async create(input: CreateTodoInput): Promise<Todo> {
     const record = await getDb().write(async () =>
       this.collection.create(r => {
         r.title = input.title;
+        r.description = input.description ?? null;
         r.isCompleted = 0;
         r.priority = input.priority;
         r.personId = input.personId ?? null;
         r.relationType = input.relationType ?? null;
+        r.tags = input.tags ?? null;
+        r.estimatedMinutes = input.estimatedMinutes ?? null;
         r.dueDate = input.dueDate ?? null;
         r.isRecurring = input.isRecurring ? 1 : 0;
         r.recurrence = input.recurrence ?? null;
@@ -76,9 +131,12 @@ export class TodoRepository implements ITodoRepository {
       const r = await this.collection.find(id);
       await r.update(m => {
         if (input.title !== undefined) m.title = input.title;
+        if (input.description !== undefined) m.description = input.description ?? null;
         if (input.priority !== undefined) m.priority = input.priority;
         if (input.personId !== undefined) m.personId = input.personId ?? null;
         if (input.relationType !== undefined) m.relationType = input.relationType ?? null;
+        if (input.tags !== undefined) m.tags = input.tags ?? null;
+        if (input.estimatedMinutes !== undefined) m.estimatedMinutes = input.estimatedMinutes ?? null;
         if (input.dueDate !== undefined) m.dueDate = input.dueDate ?? null;
         if (input.isRecurring !== undefined) m.isRecurring = input.isRecurring ? 1 : 0;
         if (input.recurrence !== undefined) m.recurrence = input.recurrence ?? null;

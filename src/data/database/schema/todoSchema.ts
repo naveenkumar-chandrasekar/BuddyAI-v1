@@ -4,10 +4,13 @@ export const todosSchema = tableSchema({
   name: 'todos',
   columns: [
     { name: 'title', type: 'string' },
+    { name: 'description', type: 'string', isOptional: true },
     { name: 'is_completed', type: 'number' },
     { name: 'priority', type: 'number' },
     { name: 'person_id', type: 'string', isOptional: true },
     { name: 'relation_type', type: 'string', isOptional: true },
+    { name: 'tags', type: 'string', isOptional: true },
+    { name: 'estimated_minutes', type: 'number', isOptional: true },
     { name: 'due_date', type: 'number', isOptional: true },
     { name: 'is_recurring', type: 'number' },
     { name: 'recurrence', type: 'string', isOptional: true },

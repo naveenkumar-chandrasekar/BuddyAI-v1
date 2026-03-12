@@ -3,10 +3,13 @@ import type { PriorityValue } from '../../shared/constants/priority';
 export interface Todo {
   id: string;
   title: string;
+  description: string | null;
   isCompleted: boolean;
   priority: PriorityValue;
   personId: string | null;
   relationType: string | null;
+  tags: string | null;
+  estimatedMinutes: number | null;
   dueDate: number | null;
   isRecurring: boolean;
   recurrence: string | null;
@@ -22,9 +25,12 @@ export interface Todo {
 
 export interface CreateTodoInput {
   title: string;
+  description?: string;
   priority: PriorityValue;
   personId?: string;
   relationType?: string;
+  tags?: string;
+  estimatedMinutes?: number;
   dueDate?: number;
   isRecurring?: boolean;
   recurrence?: string;

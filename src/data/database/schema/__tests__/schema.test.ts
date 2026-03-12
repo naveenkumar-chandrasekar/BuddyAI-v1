@@ -26,8 +26,8 @@ describe('Database Schema', () => {
     expect(tableNames).toHaveLength(14);
   });
 
-  it('has schema version 5', () => {
-    expect(schema.version).toBe(5);
+  it('has schema version 6', () => {
+    expect(schema.version).toBe(6);
   });
 
   it.each(EXPECTED_TABLES)('includes table: %s', tableName => {
@@ -79,8 +79,9 @@ describe('Database Schema', () => {
     const cols = getTable('todos').columns;
 
     it.each([
-      'title', 'is_completed', 'priority', 'person_id', 'relation_type',
-      'due_date', 'is_missed', 'missed_at', 'next_remind_at', 'remind_count',
+      'title', 'description', 'is_completed', 'priority', 'person_id', 'relation_type',
+      'tags', 'estimated_minutes', 'due_date', 'is_recurring', 'recurrence',
+      'is_missed', 'missed_at', 'next_remind_at', 'remind_count',
       'is_dismissed', 'dismissed_at', 'created_at', 'updated_at', 'completed_at', 'is_deleted',
     ])('has column: %s', col => expect(cols[col]).toBeDefined());
   });
