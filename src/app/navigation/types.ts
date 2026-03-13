@@ -50,7 +50,9 @@ export type PersonStackParamList = {
 
 export type TasksStackParamList = {
   TasksTab: undefined;
-  AddEditTask: { taskId?: string; type?: 'task' | 'todo' | 'reminder' };
+  AddTask: { taskId?: string; personId?: string };
+  AddTodo: { todoId?: string; personId?: string };
+  AddReminder: { reminderId?: string; personId?: string };
 };
 
 export type TasksTopTabParamList = {

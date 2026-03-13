@@ -11,21 +11,26 @@ const SYSTEM_PROMPT = `You are BuddyAi. Reply ONLY in valid JSON, no other text.
 {"intent":"INTENT","action":"ACTION","message":"short friendly reply","data":{}}
 
 Actions:
-TASK_INTENT: CREATE_TASK, COMPLETE_TASK, DELETE_TASK
-TODO_INTENT: CREATE_TODO, COMPLETE_TODO, DELETE_TODO
-REMINDER_INTENT: CREATE_REMINDER, DELETE_REMINDER
+TASK_INTENT: CREATE_TASK, COMPLETE_TASK, CANCEL_TASK, DELETE_TASK
+TODO_INTENT: CREATE_TODO, COMPLETE_TODO, DELETE_TODO, CREATE_TODO_ITEM, TOGGLE_TODO_ITEM
+REMINDER_INTENT: CREATE_REMINDER, DONE_REMINDER, SNOOZE_REMINDER, DELETE_REMINDER
 PEOPLE_INTENT: CREATE_PERSON, UPDATE_PERSON, DELETE_PERSON, CREATE_CONNECTION
 QUERY_INTENT: QUERY_TODAY, QUERY_UPCOMING, QUERY_BIRTHDAYS
 CONVERSATION_INTENT: GENERAL_CHAT
 
 Rules:
 - NEVER output due_date or remind_at — the app parses dates itself
-- For CREATE_TASK and CREATE_TODO: output only title and priority
-- For CREATE_REMINDER: output only title and priority
+- For CREATE_TASK: output title, priority, and optionally tags (comma-separated), estimated_minutes, is_recurring, recurrence
+- For CREATE_TODO: output title, priority, and optionally description, tags, estimated_minutes
+- For CREATE_REMINDER: output title, priority
+- For CREATE_TODO_ITEM: output todo_id from context and title
+- For TOGGLE_TODO_ITEM: output id from context and todo_id from context
+- For SNOOZE_REMINDER: output id from context and snooze_ms (milliseconds, e.g. 3600000 for 1h)
 - For CREATE_PERSON: output name and relationship_type (family|friend|work|school|other|custom)
 - For CREATE_CONNECTION: output person1_name, person2_name, label
-- For COMPLETE_TASK/COMPLETE_TODO/DELETE_*/UPDATE_*: output both id from context AND title/name so the app can find the item even if id is wrong
+- For COMPLETE_TASK/COMPLETE_TODO/CANCEL_TASK/DONE_REMINDER/DELETE_*/UPDATE_*: output both id from context AND title/name so the app can find the item even if id is wrong
 - priority: 1=high 2=medium 3=low (default 2)
+- recurrence format: daily, weekly:N (N=0-6, 0=Sun), monthly:D (D=day of month)
 
 Examples:
 [User] what do I have today
@@ -36,24 +41,34 @@ Examples:
 {"intent":"QUERY_INTENT","action":"QUERY_BIRTHDAYS","message":"Here are upcoming birthdays!","data":{}}
 [User] add buy milk task
 {"intent":"TASK_INTENT","action":"CREATE_TASK","message":"Added 'buy milk' to your tasks!","data":{"title":"buy milk","priority":2}}
-[User] add urgent task submit report
-{"intent":"TASK_INTENT","action":"CREATE_TASK","message":"Added 'submit report' as high priority!","data":{"title":"submit report","priority":1}}
+[User] add urgent task submit report estimated 30 minutes
+{"intent":"TASK_INTENT","action":"CREATE_TASK","message":"Added 'submit report' as high priority!","data":{"title":"submit report","priority":1,"estimated_minutes":30}}
+[User] add weekly task exercise every monday
+{"intent":"TASK_INTENT","action":"CREATE_TASK","message":"Added recurring exercise task!","data":{"title":"exercise","priority":2,"is_recurring":true,"recurrence":"weekly:1"}}
 [User] add todo read book
 {"intent":"TODO_INTENT","action":"CREATE_TODO","message":"Added 'read book' to your todos!","data":{"title":"read book","priority":2}}
+[User] add todo pack for trip with items passport, charger, clothes
+{"intent":"TODO_INTENT","action":"CREATE_TODO","message":"Added 'pack for trip' todo!","data":{"title":"pack for trip","priority":2,"description":"passport, charger, clothes"}}
+[User] add item passport to pack for trip todo
+{"intent":"TODO_INTENT","action":"CREATE_TODO_ITEM","message":"Added passport to pack for trip!","data":{"todo_id":"ID_FROM_CONTEXT","title":"passport"}}
+[User] check off passport in pack for trip
+{"intent":"TODO_INTENT","action":"TOGGLE_TODO_ITEM","message":"Toggled passport!","data":{"id":"ITEM_ID_FROM_CONTEXT","todo_id":"TODO_ID_FROM_CONTEXT"}}
 [User] remind me to call mom
 {"intent":"REMINDER_INTENT","action":"CREATE_REMINDER","message":"I'll remind you to call mom!","data":{"title":"call mom","priority":2}}
-[User] remind me to take medicine
-{"intent":"REMINDER_INTENT","action":"CREATE_REMINDER","message":"I'll remind you to take medicine!","data":{"title":"take medicine","priority":2}}
+[User] snooze call mom reminder 1 hour
+{"intent":"REMINDER_INTENT","action":"SNOOZE_REMINDER","message":"Snoozed call mom for 1 hour!","data":{"id":"ID_FROM_CONTEXT","title":"call mom","snooze_ms":3600000}}
+[User] done with call mom reminder
+{"intent":"REMINDER_INTENT","action":"DONE_REMINDER","message":"Marked call mom as done!","data":{"id":"ID_FROM_CONTEXT","title":"call mom"}}
+[User] cancel submit report task
+{"intent":"TASK_INTENT","action":"CANCEL_TASK","message":"Cancelled submit report!","data":{"id":"ID_FROM_CONTEXT","title":"submit report"}}
 [User] add john to family
 {"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added John!","data":{"name":"john","relationship_type":"family"}}
 [User] add sarah as a colleague
-{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Sarah!","data":{"name":"sarah","relationship_type":"office"}}
+{"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Sarah!","data":{"name":"sarah","relationship_type":"work"}}
 [User] add mike
 {"intent":"PEOPLE_INTENT","action":"CREATE_PERSON","message":"Added Mike!","data":{"name":"mike","relationship_type":"other"}}
 [User] relate john and sarah as siblings
 {"intent":"PEOPLE_INTENT","action":"CREATE_CONNECTION","message":"Connected John and Sarah!","data":{"person1_name":"john","person2_name":"sarah","label":"siblings"}}
-[User] connect mike and alice as cousins
-{"intent":"PEOPLE_INTENT","action":"CREATE_CONNECTION","message":"Connected Mike and Alice!","data":{"person1_name":"mike","person2_name":"alice","label":"cousins"}}
 [User] mark buy milk as done
 {"intent":"TASK_INTENT","action":"COMPLETE_TASK","message":"Marked buy milk as done!","data":{"id":"ID_FROM_CONTEXT","title":"buy milk"}}
 [User] complete read book todo
@@ -116,25 +131,44 @@ export async function buildPrompt(
   ).slice(0, 5);
   const tasksSummary = todayTasks.length === 0
     ? 'none'
-    : todayTasks.map(t => `${t.title}[id:${t.id}][${PRIORITY_LABELS[t.priority]}]${t.personId ? `[person_id:${t.personId}]` : ''}`).join(', ');
+    : todayTasks.map(t => {
+        let s = `${t.title}[id:${t.id}][${PRIORITY_LABELS[t.priority]}]`;
+        if (t.personId) s += `[person_id:${t.personId}]`;
+        if (t.tags) s += `[tags:${t.tags}]`;
+        if (t.estimatedMinutes) s += `[est:${t.estimatedMinutes}m]`;
+        if (t.isRecurring) s += `[recurring:${t.recurrence ?? ''}]`;
+        return s;
+      }).join(', ');
 
   const todayTodos = allTodos.filter(
     t => t.dueDate !== null && t.dueDate >= start && t.dueDate <= end && !t.isCompleted,
   ).slice(0, 5);
   const todosSummary = todayTodos.length === 0
     ? 'none'
-    : todayTodos.map(t => `${t.title}[id:${t.id}]${t.personId ? `[person_id:${t.personId}]` : ''}`).join(', ');
+    : todayTodos.map(t => {
+        let s = `${t.title}[id:${t.id}]`;
+        if (t.personId) s += `[person_id:${t.personId}]`;
+        if (t.tags) s += `[tags:${t.tags}]`;
+        if (t.estimatedMinutes) s += `[est:${t.estimatedMinutes}m]`;
+        return s;
+      }).join(', ');
 
   const todayReminders = allReminders.filter(
     r => r.remindAt >= start && r.remindAt <= end && !r.isDone,
   ).slice(0, 5);
   const remindersSummary = todayReminders.length === 0
     ? 'none'
-    : todayReminders.map(r => `${r.title}[id:${r.id}]@${new Date(r.remindAt).toLocaleTimeString()}`).join(', ');
+    : todayReminders.map(r => {
+        let s = `${r.title}[id:${r.id}]@${new Date(r.remindAt).toLocaleTimeString()}`;
+        if (r.snoozeUntil) s += `[snoozed_until:${new Date(r.snoozeUntil).toLocaleTimeString()}]`;
+        if (r.tags) s += `[tags:${r.tags}]`;
+        return s;
+      }).join(', ');
 
   const missedTasks = allTasks.filter(
     t => t.dueDate !== null && t.dueDate < start &&
-      (t.status === TaskStatus.PENDING || t.status === TaskStatus.IN_PROGRESS) && !t.isDismissed,
+      t.status !== TaskStatus.DONE && t.status !== TaskStatus.CANCELLED &&
+      t.status !== TaskStatus.DISMISSED && !t.isDismissed,
   );
   const missedTodos = allTodos.filter(
     t => t.dueDate !== null && t.dueDate < start && !t.isCompleted && !t.isDismissed,

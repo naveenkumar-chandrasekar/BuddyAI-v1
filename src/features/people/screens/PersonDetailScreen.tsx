@@ -6,6 +6,7 @@ import { usePersonStore } from '../../../features/people/store/peopleStore';
 import { getItemsByPerson } from '../../../domain/usecases/tasks/GetItemsByPersonUseCase';
 import { RELATIONSHIP_LABELS } from '../../../shared/constants/relationships';
 import { PRIORITY_LABELS, Priority } from '../../../shared/constants/priority';
+import { TaskStatus } from '../../../shared/constants/taskStatus';
 import type { Task } from '../../../domain/models/Task';
 import type { Todo } from '../../../domain/models/Todo';
 import type { Reminder } from '../../../domain/models/Reminder';
@@ -19,8 +20,17 @@ const PRIORITY_COLOR: Record<number, string> = {
   [Priority.HIGH]: '#E53935', [Priority.MEDIUM]: '#FB8C00', [Priority.LOW]: '#43A047',
 };
 
+const STATUS_ICON: Record<string, string> = {
+  [TaskStatus.PENDING]: '🕐',
+  [TaskStatus.IN_PROGRESS]: '⏳',
+  [TaskStatus.DONE]: '✅',
+  [TaskStatus.CANCELLED]: '✖',
+  [TaskStatus.MISSED]: '⚠️',
+  [TaskStatus.DISMISSED]: '➖',
+};
+
 function avatarColor(name: string): string {
-  const palette = ['#5B3EBF', '#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#F4511E'];
+  const palette = ['#5C33D4', '#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#F4511E'];
   let h = 0;
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + h * 31;
   return palette[Math.abs(h) % palette.length];
@@ -33,6 +43,17 @@ function initials(name: string): string {
 function formatBirthday(birthday: string): string {
   const [, m, d] = birthday.split('-').map(Number);
   return new Date(2000, m - 1, d).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+}
+
+function TagRow({ tags }: { tags: string | null | undefined }) {
+  if (!tags) return null;
+  const list = tags.split(',').map(t => t.trim()).filter(Boolean);
+  if (list.length === 0) return null;
+  return (
+    <View style={styles.tagRow}>
+      {list.map(tag => <Chip key={tag} compact style={styles.tag}>{tag}</Chip>)}
+    </View>
+  );
 }
 
 export default function PersonDetailScreen({ navigation, route }: PersonDetailScreenProps) {
@@ -76,15 +97,28 @@ export default function PersonDetailScreen({ navigation, route }: PersonDetailSc
     ]);
   }
 
+  function navigateAddTask() {
+    (navigation as never as { navigate: (screen: string, params: object) => void })
+      .navigate('TasksTab' as never, { screen: 'AddTask', params: { personId } } as never);
+  }
+  function navigateAddTodo() {
+    (navigation as never as { navigate: (screen: string, params: object) => void })
+      .navigate('TasksTab' as never, { screen: 'AddTodo', params: { personId } } as never);
+  }
+  function navigateAddReminder() {
+    (navigation as never as { navigate: (screen: string, params: object) => void })
+      .navigate('TasksTab' as never, { screen: 'AddReminder', params: { personId } } as never);
+  }
+
   if (!person) {
     return <View style={styles.center}><Text>Person not found.</Text></View>;
   }
 
-  const relColor = RELATION_COLORS[person.relationshipType] ?? '#5B3EBF';
+  const relColor = RELATION_COLORS[person.relationshipType] ?? '#5C33D4';
   const relLabel = person.customRelation || RELATIONSHIP_LABELS[person.relationshipType];
-
   const myConnections = connections.filter(c => c.personId === personId || c.relatedPersonId === personId);
   const otherPeople = people.filter(p => p.id !== personId);
+  const now = Date.now();
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -181,7 +215,16 @@ export default function PersonDetailScreen({ navigation, route }: PersonDetailSc
 
       <Divider style={styles.divider} />
 
-      {/* Tasks / Todos / Reminders */}
+      {/* Linked items header + quick-add */}
+      <View style={styles.sectionHeader}>
+        <Text variant="titleMedium">Linked Items</Text>
+      </View>
+      <View style={styles.quickAdd}>
+        <Button compact mode="outlined" onPress={navigateAddTask} style={styles.quickAddBtn}>+ Task</Button>
+        <Button compact mode="outlined" onPress={navigateAddTodo} style={styles.quickAddBtn}>+ Todo</Button>
+        <Button compact mode="outlined" onPress={navigateAddReminder} style={styles.quickAddBtn}>+ Reminder</Button>
+      </View>
+
       {loading ? (
         <ActivityIndicator style={styles.loader} />
       ) : (
@@ -190,38 +233,96 @@ export default function PersonDetailScreen({ navigation, route }: PersonDetailSc
             <View style={styles.itemsSection}>
               <Text variant="titleSmall" style={styles.itemsSectionTitle}>Tasks ({tasks.length})</Text>
               {tasks.map(t => (
-                <View key={t.id} style={styles.itemRow}>
-                  <Text style={styles.itemDot}>•</Text>
-                  <Text variant="bodyMedium" style={styles.itemTitle}>{t.title}</Text>
-                  <Text variant="bodySmall" style={styles.itemMeta}>{t.status}</Text>
+                <View key={t.id} style={styles.itemCard}>
+                  <View style={styles.itemRow}>
+                    <Text style={styles.itemStatusIcon}>{STATUS_ICON[t.status] ?? '🕐'}</Text>
+                    <Text
+                      variant="bodyMedium"
+                      style={[
+                        styles.itemTitle,
+                        t.status === TaskStatus.DONE || t.status === TaskStatus.CANCELLED ? styles.strikethrough : undefined,
+                      ]}
+                    >
+                      {t.title}
+                    </Text>
+                    {t.estimatedMinutes ? (
+                      <Text variant="bodySmall" style={styles.itemMeta}>~{t.estimatedMinutes}m</Text>
+                    ) : null}
+                    {t.isRecurring ? <Text style={styles.recurringBadge}>↻</Text> : null}
+                  </View>
+                  {t.dueDate ? (
+                    <Text variant="bodySmall" style={styles.itemSub}>
+                      Due {new Date(t.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </Text>
+                  ) : null}
+                  <TagRow tags={t.tags} />
                 </View>
               ))}
             </View>
           )}
+
           {todos.length > 0 && (
             <View style={styles.itemsSection}>
               <Text variant="titleSmall" style={styles.itemsSectionTitle}>Todos ({todos.length})</Text>
               {todos.map(t => (
-                <View key={t.id} style={styles.itemRow}>
-                  <Text style={styles.itemDot}>{t.isCompleted ? '✅' : '⬜'}</Text>
-                  <Text variant="bodyMedium" style={[styles.itemTitle, t.isCompleted && styles.strikethrough]}>{t.title}</Text>
+                <View key={t.id} style={styles.itemCard}>
+                  <View style={styles.itemRow}>
+                    <Text style={styles.itemStatusIcon}>{t.isCompleted ? '✅' : '⬜'}</Text>
+                    <Text
+                      variant="bodyMedium"
+                      style={[styles.itemTitle, t.isCompleted ? styles.strikethrough : undefined]}
+                    >
+                      {t.title}
+                    </Text>
+                    {t.estimatedMinutes ? (
+                      <Text variant="bodySmall" style={styles.itemMeta}>~{t.estimatedMinutes}m</Text>
+                    ) : null}
+                    {t.isRecurring ? <Text style={styles.recurringBadge}>↻</Text> : null}
+                  </View>
+                  {t.description ? (
+                    <Text variant="bodySmall" style={styles.itemSub}>{t.description}</Text>
+                  ) : null}
+                  <TagRow tags={t.tags} />
                 </View>
               ))}
             </View>
           )}
+
           {reminders.length > 0 && (
             <View style={styles.itemsSection}>
               <Text variant="titleSmall" style={styles.itemsSectionTitle}>Reminders ({reminders.length})</Text>
-              {reminders.map(r => (
-                <View key={r.id} style={styles.itemRow}>
-                  <Text style={styles.itemDot}>🔔</Text>
-                  <Text variant="bodyMedium" style={styles.itemTitle}>{r.title}</Text>
-                </View>
-              ))}
+              {reminders.map(r => {
+                const isOverdue = r.remindAt < now && !r.isDone;
+                const isSnoozed = !!(r.snoozeUntil && r.snoozeUntil > now);
+                const timeStr = new Date(r.remindAt).toLocaleString('en-US', {
+                  month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                });
+                return (
+                  <View key={r.id} style={styles.itemCard}>
+                    <View style={styles.itemRow}>
+                      <Text style={styles.itemStatusIcon}>
+                        {r.isDone ? '✅' : isSnoozed ? '😴' : isOverdue ? '⚠️' : '🔔'}
+                      </Text>
+                      <Text
+                        variant="bodyMedium"
+                        style={[styles.itemTitle, r.isDone ? styles.strikethrough : undefined, isOverdue ? styles.overdueText : undefined]}
+                      >
+                        {r.title}
+                      </Text>
+                    </View>
+                    <Text variant="bodySmall" style={[styles.itemSub, isOverdue ? styles.overdueText : undefined]}>
+                      {isOverdue ? '⚠ ' : ''}{timeStr}
+                      {isSnoozed && r.snoozeUntil ? ` · Snoozed → ${new Date(r.snoozeUntil).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}` : ''}
+                    </Text>
+                    <TagRow tags={r.tags} />
+                  </View>
+                );
+              })}
             </View>
           )}
+
           {tasks.length === 0 && todos.length === 0 && reminders.length === 0 && (
-            <Text variant="bodySmall" style={styles.emptySection}>No tasks or reminders linked.</Text>
+            <Text variant="bodySmall" style={styles.emptySection}>No items linked yet.</Text>
           )}
         </>
       )}
@@ -302,29 +403,37 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   emptySection: { paddingHorizontal: 20, paddingBottom: 12, opacity: 0.4 },
   connList: { paddingHorizontal: 16, gap: 8, marginBottom: 8 },
-  connCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9f9f9', borderRadius: 12, padding: 12, gap: 10 },
+  connCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F4F1FF', borderRadius: 12, padding: 12, gap: 10 },
   connAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   connAvatarText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   connBody: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   connName: { fontWeight: '600' },
   connLabelChip: { height: 26 },
   removeConn: { fontSize: 16, opacity: 0.4, padding: 4 },
-  itemsSection: { paddingHorizontal: 20, paddingTop: 12 },
-  itemsSectionTitle: { fontWeight: '700', marginBottom: 6, opacity: 0.7 },
-  itemRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  itemDot: { fontSize: 16 },
-  itemTitle: { flex: 1 },
-  itemMeta: { opacity: 0.4, fontSize: 12 },
+  quickAdd: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingBottom: 12 },
+  quickAddBtn: { flex: 1 },
+  itemsSection: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+  itemsSectionTitle: { fontWeight: '700', marginBottom: 6, opacity: 0.6, paddingHorizontal: 4 },
+  itemCard: { backgroundColor: '#F8F6FF', borderRadius: 10, padding: 10, marginBottom: 6 },
+  itemRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  itemStatusIcon: { fontSize: 15, width: 22 },
+  itemTitle: { flex: 1, fontSize: 14 },
+  itemMeta: { opacity: 0.5, fontSize: 11 },
+  itemSub: { opacity: 0.5, fontSize: 11, marginTop: 3, paddingLeft: 28 },
+  recurringBadge: { fontSize: 12, color: '#5C33D4' },
   strikethrough: { textDecorationLine: 'line-through', opacity: 0.5 },
+  overdueText: { color: '#DC2626' },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4, paddingLeft: 28 },
+  tag: { height: 22 },
   dialogContent: { gap: 4 },
   dialogLabel: { opacity: 0.6, marginBottom: 4 },
   personScroll: { maxHeight: 90 },
   personChip: { alignItems: 'center', marginRight: 12, gap: 4, padding: 4, borderRadius: 8 },
-  personChipSelected: { backgroundColor: '#EDE5FF' },
+  personChipSelected: { backgroundColor: '#EDE9FF' },
   personChipAvatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   personChipInitials: { color: '#fff', fontWeight: '700' },
   personChipName: { fontSize: 11, opacity: 0.7, maxWidth: 52, textAlign: 'center' },
-  personChipNameSelected: { color: '#5B3EBF', fontWeight: '700' },
+  personChipNameSelected: { color: '#5C33D4', fontWeight: '700' },
   loader: { marginTop: 24 },
   connLabelInput: { marginTop: 12 },
 });

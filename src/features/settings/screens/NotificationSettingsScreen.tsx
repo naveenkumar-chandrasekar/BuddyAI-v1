@@ -111,5 +111,5 @@ const styles = StyleSheet.create({
   timeRow: { paddingBottom: 12 },
   timeInput: { marginBottom: 8 },
   saveBtn: { alignSelf: 'flex-end' },
-  error: { color: '#c62828', fontSize: 12, marginTop: 4 },
+  error: { color: '#DC2626', fontSize: 12, marginTop: 4 },
 });

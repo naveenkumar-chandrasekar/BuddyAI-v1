@@ -23,7 +23,7 @@ const PRIORITY_DOT: Record<number, string> = {
 };
 
 function avatarColor(name: string): string {
-  const palette = ['#5B3EBF', '#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#F4511E'];
+  const palette = ['#5C33D4', '#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#F4511E'];
   let h = 0;
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + h * 31;
   return palette[Math.abs(h) % palette.length];
@@ -54,7 +54,7 @@ const FILTERS = [
 function PersonCard({ person, onPress }: { person: Person; onPress: () => void }) {
   const daysLeft = birthdayDaysLeft(person.birthday);
   const showBirthday = daysLeft !== null && daysLeft <= 14;
-  const relColor = RELATION_COLORS[person.relationshipType] ?? '#5B3EBF';
+  const relColor = RELATION_COLORS[person.relationshipType] ?? '#5C33D4';
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.75}>
@@ -157,7 +157,7 @@ export default function PersonListScreen({ navigation }: PersonListScreenProps) 
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#F6F4FF' },
   search: { margin: 12, borderRadius: 12, backgroundColor: '#fff' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, marginBottom: 4 },
   chip: { marginRight: 6, marginBottom: 6 },

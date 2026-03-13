@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   title: { marginBottom: 12 },
   body: { marginBottom: 32, lineHeight: 22 },
   timeButton: { alignSelf: 'center', marginBottom: 40, borderRadius: 12, padding: 16 },
-  timeText: { color: '#5B3EBF', fontWeight: 'bold' },
+  timeText: { color: '#5C33D4', fontWeight: 'bold' },
   picker: { marginBottom: 40, alignSelf: 'center' },
   cta: { width: '100%' },
 });

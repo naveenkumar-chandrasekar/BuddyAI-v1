@@ -8,6 +8,7 @@ const TABLES = [
   'persons',
   'tasks',
   'todos',
+  'todo_items',
   'reminders',
   'chat_sessions',
   'chat_messages',

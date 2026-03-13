@@ -5,11 +5,16 @@ import { personRepository } from '../../data/repositories/PeopleRepository';
 import { addTask } from '../../domain/usecases/tasks/AddTaskUseCase';
 import { addTodo } from '../../domain/usecases/tasks/AddTodoUseCase';
 import { addReminder } from '../../domain/usecases/tasks/AddReminderUseCase';
-import { updateTask } from '../../domain/usecases/tasks/UpdateTaskUseCase';
+import { completeTask } from '../../domain/usecases/tasks/CompleteTaskUseCase';
+import { cancelTask } from '../../domain/usecases/tasks/CancelTaskUseCase';
 import { toggleTodo } from '../../domain/usecases/tasks/UpdateTodoUseCase';
 import { deleteTask } from '../../domain/usecases/tasks/DeleteTaskUseCase';
 import { deleteTodo } from '../../domain/usecases/tasks/DeleteTodoUseCase';
 import { deleteReminder } from '../../domain/usecases/tasks/DeleteReminderUseCase';
+import { doneReminder } from '../../domain/usecases/tasks/DoneReminderUseCase';
+import { snoozeReminder } from '../../domain/usecases/tasks/SnoozeReminderUseCase';
+import { addTodoItem } from '../../domain/usecases/tasks/AddTodoItemUseCase';
+import { toggleTodoItem } from '../../domain/usecases/tasks/UpdateTodoItemUseCase';
 import { taskRepository } from '../../data/repositories/TaskRepository';
 import { todoRepository } from '../../data/repositories/TodoRepository';
 import { reminderRepository } from '../../data/repositories/ReminderRepository';
@@ -17,7 +22,6 @@ import { notificationConfigRepository } from '../../data/repositories/Notificati
 import { setDailyNotifTime } from '../../domain/usecases/notifications/ScheduleDailyNotificationUseCase';
 import type { ChatIntent } from '../../domain/models/Chat';
 import { Priority } from '../../shared/constants/priority';
-import { TaskStatus } from '../../shared/constants/taskStatus';
 
 export interface ActionResult {
   success: boolean;
@@ -144,13 +148,24 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
           dueDate: d.due_date ? Number(d.due_date) : undefined,
           priority: toPriority(d.priority),
           personId: d.person_id ? String(d.person_id) : undefined,
+          tags: d.tags ? String(d.tags) : undefined,
+          estimatedMinutes: d.estimated_minutes ? Number(d.estimated_minutes) : undefined,
+          isRecurring: Boolean(d.is_recurring),
+          recurrence: d.recurrence ? String(d.recurrence) : undefined,
         });
         return { success: true };
 
       case 'COMPLETE_TASK': {
         const ctid = await resolveTaskId(d.id, d.title);
         if (!ctid) return { success: false, message: `Task "${d.title ?? d.id}" not found` };
-        await updateTask(ctid, { status: TaskStatus.DONE });
+        await completeTask(ctid);
+        return { success: true };
+      }
+
+      case 'CANCEL_TASK': {
+        const cxtid = await resolveTaskId(d.id, d.title);
+        if (!cxtid) return { success: false, message: `Task "${d.title ?? d.id}" not found` };
+        await cancelTask(cxtid);
         return { success: true };
       }
 
@@ -162,15 +177,35 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
       }
 
       case 'CREATE_TODO': {
-        const recurrence = d.recurrence ? String(d.recurrence) : undefined;
         await addTodo({
           title: String(d.title ?? ''),
           priority: toPriority(d.priority),
           dueDate: d.due_date ? Number(d.due_date) : undefined,
           personId: d.person_id ? String(d.person_id) : undefined,
           isRecurring: Boolean(d.is_recurring),
-          recurrence,
+          recurrence: d.recurrence ? String(d.recurrence) : undefined,
+          description: d.description ? String(d.description) : undefined,
+          tags: d.tags ? String(d.tags) : undefined,
+          estimatedMinutes: d.estimated_minutes ? Number(d.estimated_minutes) : undefined,
         });
+        return { success: true };
+      }
+
+      case 'CREATE_TODO_ITEM': {
+        const todoId = String(d.todo_id ?? '').trim();
+        if (!todoId) return { success: false, message: 'todo_id is required' };
+        await addTodoItem({
+          todoId,
+          title: String(d.title ?? ''),
+          personId: d.person_id ? String(d.person_id) : undefined,
+        });
+        return { success: true };
+      }
+
+      case 'TOGGLE_TODO_ITEM': {
+        const itemId = String(d.id ?? '').trim();
+        if (!itemId) return { success: false, message: 'Item id is required' };
+        await toggleTodoItem(itemId);
         return { success: true };
       }
 
@@ -199,6 +234,21 @@ export async function executeAction(intent: ChatIntent): Promise<ActionResult> {
           personId: d.person_id ? String(d.person_id) : undefined,
         });
         return { success: true };
+
+      case 'DONE_REMINDER': {
+        const doneRid = await resolveReminderId(d.id, d.title);
+        if (!doneRid) return { success: false, message: `Reminder "${d.title ?? d.id}" not found` };
+        await doneReminder(doneRid);
+        return { success: true };
+      }
+
+      case 'SNOOZE_REMINDER': {
+        const snoozeRid = await resolveReminderId(d.id, d.title);
+        if (!snoozeRid) return { success: false, message: `Reminder "${d.title ?? d.id}" not found` };
+        const snoozeMs = d.snooze_ms ? Number(d.snooze_ms) : 3600000;
+        await snoozeReminder(snoozeRid, snoozeMs);
+        return { success: true };
+      }
 
       case 'DELETE_REMINDER': {
         const drid = await resolveReminderId(d.id, d.title);

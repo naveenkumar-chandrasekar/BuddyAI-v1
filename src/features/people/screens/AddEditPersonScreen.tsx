@@ -28,8 +28,8 @@ const RELATION_ICONS: Record<string, string> = {
 };
 
 function avatarColor(name: string): string {
-  if (!name) return '#5B3EBF';
-  const palette = ['#5B3EBF', '#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#F4511E'];
+  if (!name) return '#5C33D4';
+  const palette = ['#5C33D4', '#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#F4511E'];
   let h = 0;
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + h * 31;
   return palette[Math.abs(h) % palette.length];
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   relChipLabel: { fontSize: 13, fontWeight: '600' },
   birthdayHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginBottom: 8 },
   iosPicker: { marginBottom: 8 },
-  dateBtn: { backgroundColor: '#EDE5FF', borderRadius: 10, padding: 14, alignItems: 'center', marginBottom: 8 },
-  dateBtnText: { color: '#5B3EBF', fontWeight: '600' },
+  dateBtn: { backgroundColor: '#EDE9FF', borderRadius: 10, padding: 14, alignItems: 'center', marginBottom: 8 },
+  dateBtnText: { color: '#5C33D4', fontWeight: '600' },
   save: { marginTop: 24, marginBottom: 40 },
 });

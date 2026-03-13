@@ -46,7 +46,7 @@ const linking: LinkingOptions<any> = {
           },
           TasksTab: {
             screens: {
-              AddEditTask: 'task/:taskId',
+              AddTask: 'task/:taskId',
             },
           },
         },

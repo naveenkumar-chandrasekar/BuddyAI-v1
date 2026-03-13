@@ -163,5 +163,5 @@ const styles = StyleSheet.create({
   button: { alignSelf: 'flex-start', marginTop: 8 },
   lastSync: { opacity: 0.6, marginBottom: 8 },
   success: { color: '#2e7d32', marginTop: 8 },
-  error: { color: '#c62828', marginTop: 8 },
+  error: { color: '#DC2626', marginTop: 8 },
 });

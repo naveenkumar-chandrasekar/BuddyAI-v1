@@ -38,7 +38,8 @@ export async function buildQueryTodayMessage(): Promise<string> {
 
   const tasks = allTasks.filter(
     t => t.dueDate !== null && t.dueDate >= start && t.dueDate <= end &&
-      t.status !== TaskStatus.DONE && t.status !== TaskStatus.DISMISSED && !t.isDismissed,
+      t.status !== TaskStatus.DONE && t.status !== TaskStatus.DISMISSED &&
+      t.status !== TaskStatus.CANCELLED && !t.isDismissed,
   );
   const todos = allTodos.filter(
     t => t.dueDate !== null && t.dueDate >= start && t.dueDate <= end &&
@@ -49,7 +50,8 @@ export async function buildQueryTodayMessage(): Promise<string> {
   );
   const missed = [
     ...allTasks.filter(t => t.dueDate !== null && t.dueDate < start &&
-      (t.status === TaskStatus.PENDING || t.status === TaskStatus.IN_PROGRESS) && !t.isDismissed),
+      t.status !== TaskStatus.DONE && t.status !== TaskStatus.CANCELLED &&
+      t.status !== TaskStatus.DISMISSED && !t.isDismissed),
     ...allTodos.filter(t => t.dueDate !== null && t.dueDate < start && !t.isCompleted && !t.isDismissed),
     ...allReminders.filter(r => r.remindAt < now && !r.isDone && !r.isDismissed),
   ];
@@ -60,15 +62,29 @@ export async function buildQueryTodayMessage(): Promise<string> {
     parts.push("You have nothing scheduled for today. Enjoy your free day!");
   } else {
     if (tasks.length > 0) {
-      parts.push(`Tasks (${tasks.length}): ${tasks.map(t => t.title).join(', ')}.`);
+      parts.push(`Tasks (${tasks.length}): ${tasks.map(t => {
+        let s = t.title;
+        if (t.estimatedMinutes) s += ` (~${t.estimatedMinutes}m)`;
+        if (t.isRecurring) s += ' [recurring]';
+        return s;
+      }).join(', ')}.`);
     }
     if (todos.length > 0) {
-      parts.push(`Todos (${todos.length}): ${todos.map(t => t.title).join(', ')}.`);
+      parts.push(`Todos (${todos.length}): ${todos.map(t => {
+        let s = t.title;
+        if (t.estimatedMinutes) s += ` (~${t.estimatedMinutes}m)`;
+        return s;
+      }).join(', ')}.`);
     }
     if (reminders.length > 0) {
       parts.push(`Reminders (${reminders.length}): ${reminders.map(r => {
         const time = new Date(r.remindAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        return `${r.title} at ${time}`;
+        let s = `${r.title} at ${time}`;
+        if (r.snoozeUntil && r.snoozeUntil > Date.now()) {
+          const snoozeTime = new Date(r.snoozeUntil).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+          s += ` (snoozed until ${snoozeTime})`;
+        }
+        return s;
       }).join(', ')}.`);
     }
   }
@@ -93,7 +109,8 @@ export async function buildQueryUpcomingMessage(): Promise<string> {
 
   const tasks = allTasks.filter(
     t => t.dueDate !== null && t.dueDate >= start && t.dueDate <= end &&
-      t.status !== TaskStatus.DONE && t.status !== TaskStatus.DISMISSED,
+      t.status !== TaskStatus.DONE && t.status !== TaskStatus.DISMISSED &&
+      t.status !== TaskStatus.CANCELLED,
   );
   const todos = allTodos.filter(
     t => t.dueDate !== null && t.dueDate >= start && t.dueDate <= end && !t.isCompleted,

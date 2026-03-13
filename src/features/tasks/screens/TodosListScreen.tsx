@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
-import { Text, List, FAB, ActivityIndicator, Checkbox, IconButton, Divider } from 'react-native-paper';
+import { Text, List, FAB, ActivityIndicator, Checkbox, IconButton, Divider, Chip, TextInput } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { TasksStackParamList } from '../../../app/navigation/types';
@@ -15,9 +15,26 @@ type Row =
 
 export default function TodosListScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<TasksStackParamList>>();
-  const { todos, loading, loadAll, toggleTodo, dismissItem } = useTaskStore();
+  const {
+    todos, todoItems, loading,
+    loadAll, toggleTodo, dismissItem,
+    loadTodoItems, addTodoItem, toggleTodoItem, deleteTodoItem,
+  } = useTaskStore();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [newItemText, setNewItemText] = useState('');
 
   useEffect(() => { loadAll(); }, [loadAll]);
+
+  function toggleExpand(id: string) {
+    if (expandedId === id) {
+      setExpandedId(null);
+      setNewItemText('');
+    } else {
+      setExpandedId(id);
+      setNewItemText('');
+      loadTodoItems(id);
+    }
+  }
 
   const missed = todos.filter(t => t.isMissed && !t.isDismissed && !t.isCompleted);
   const active = todos.filter(t => !t.isMissed && !t.isDismissed && !t.isCompleted);
@@ -62,28 +79,98 @@ export default function TodosListScreen() {
               );
             }
             const { todo } = row;
+            const isExpanded = expandedId === todo.id;
+            const items = todoItems[todo.id] ?? [];
+
+            const descParts = [PRIORITY_LABELS[todo.priority]];
+            if (todo.isRecurring && todo.recurrence) descParts.push(describeRecurrence(todo.recurrence));
+            if (todo.estimatedMinutes) descParts.push(`~${todo.estimatedMinutes}m`);
+            if (todo.description) descParts.push(todo.description);
+
             return (
-              <List.Item
-                title={todo.title}
-                description={todo.isRecurring && todo.recurrence ? PRIORITY_LABELS[todo.priority] + ' · ' + describeRecurrence(todo.recurrence) : PRIORITY_LABELS[todo.priority]}
-                titleStyle={[
-                  todo.isCompleted ? styles.done : undefined,
-                  todo.isMissed ? styles.missedText : undefined,
-                ]}
-                left={() => (
-                  <Checkbox
-                    status={todo.isCompleted ? 'checked' : 'unchecked'}
-                    onPress={() => toggleTodo(todo.id)}
-                  />
+              <View>
+                <List.Item
+                  title={todo.title}
+                  description={descParts.join(' · ')}
+                  titleStyle={[
+                    todo.isCompleted ? styles.done : undefined,
+                    todo.isMissed ? styles.missedText : undefined,
+                  ]}
+                  onPress={() => toggleExpand(todo.id)}
+                  left={() => (
+                    <Checkbox
+                      status={todo.isCompleted ? 'checked' : 'unchecked'}
+                      onPress={() => toggleTodo(todo.id)}
+                    />
+                  )}
+                  right={() => (
+                    <View style={styles.rowActions}>
+                      {todo.isMissed && (
+                        <IconButton
+                          icon="close-circle-outline"
+                          size={20}
+                          onPress={() => dismissItem('todo', todo.id)}
+                        />
+                      )}
+                      <IconButton
+                        icon={isExpanded ? 'chevron-up' : 'chevron-down'}
+                        size={20}
+                        onPress={() => toggleExpand(todo.id)}
+                      />
+                    </View>
+                  )}
+                />
+                {todo.tags ? (
+                  <View style={styles.chipRow}>
+                    {todo.tags.split(',').map(t => t.trim()).filter(Boolean).map(tag => (
+                      <Chip key={tag} compact style={styles.chip}>{tag}</Chip>
+                    ))}
+                  </View>
+                ) : null}
+                {isExpanded && (
+                  <View style={styles.subItems}>
+                    {items.map(item => (
+                      <List.Item
+                        key={item.id}
+                        title={item.title}
+                        titleStyle={item.isCompleted ? styles.done : undefined}
+                        style={styles.subItem}
+                        left={() => (
+                          <Checkbox
+                            status={item.isCompleted ? 'checked' : 'unchecked'}
+                            onPress={() => toggleTodoItem(item.id)}
+                          />
+                        )}
+                        right={() => (
+                          <IconButton
+                            icon="close"
+                            size={16}
+                            onPress={() => deleteTodoItem(item.id, todo.id)}
+                          />
+                        )}
+                      />
+                    ))}
+                    <View style={styles.addItemRow}>
+                      <TextInput
+                        value={newItemText}
+                        onChangeText={setNewItemText}
+                        placeholder="Add checklist item..."
+                        dense
+                        mode="outlined"
+                        style={styles.addItemInput}
+                      />
+                      <IconButton
+                        icon="plus-circle"
+                        onPress={async () => {
+                          if (!newItemText.trim()) return;
+                          await addTodoItem({ todoId: todo.id, title: newItemText.trim() });
+                          setNewItemText('');
+                        }}
+                      />
+                    </View>
+                  </View>
                 )}
-                right={todo.isMissed ? () => (
-                  <IconButton
-                    icon="close-circle-outline"
-                    size={20}
-                    onPress={() => dismissItem('todo', todo.id)}
-                  />
-                ) : undefined}
-              />
+              </View>
             );
           }}
         />
@@ -91,7 +178,7 @@ export default function TodosListScreen() {
       <FAB
         icon="plus"
         style={styles.fab}
-        onPress={() => navigation.navigate('AddEditTask', { type: 'todo' })}
+        onPress={() => navigation.navigate('AddTodo', {})}
       />
     </View>
   );
@@ -105,6 +192,13 @@ const styles = StyleSheet.create({
   done: { textDecorationLine: 'line-through', opacity: 0.5 },
   fab: { position: 'absolute', right: 16, bottom: 16 },
   sectionHeader: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, opacity: 0.6 },
-  missedHeader: { color: '#c62828' },
-  missedText: { color: '#c62828' },
+  missedHeader: { color: '#DC2626' },
+  missedText: { color: '#DC2626' },
+  rowActions: { flexDirection: 'row', alignItems: 'center' },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, paddingHorizontal: 16, paddingBottom: 4 },
+  chip: { height: 24 },
+  subItems: { backgroundColor: '#EEE8FF', paddingLeft: 16, paddingBottom: 8 },
+  subItem: { paddingVertical: 0 },
+  addItemRow: { flexDirection: 'row', alignItems: 'center', paddingRight: 8 },
+  addItemInput: { flex: 1 },
 });

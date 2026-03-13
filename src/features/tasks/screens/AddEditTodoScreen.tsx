@@ -9,19 +9,16 @@ import { Priority, PRIORITY_LABELS } from '../../../shared/constants/priority';
 import { WEEKDAY_LABELS, computeFirstDueDate, describeRecurrence } from '../../../core/utils/recurrence';
 import type { PriorityValue } from '../../../shared/constants/priority';
 
-type Props = NativeStackScreenProps<TasksStackParamList, 'AddTask'>;
+type Props = NativeStackScreenProps<TasksStackParamList, 'AddTodo'>;
 type RecurrenceType = 'none' | 'weekly' | 'monthly';
 type MonthlyType = 'date' | 'first' | 'last';
-type PickerMode = 'date' | 'time';
+type PickerMode = 'date';
 
 function formatDate(d: Date): string {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 }
-function formatTime(d: Date): string {
-  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-}
 
-export default function AddEditTaskScreen({ navigation, route }: Props) {
+export default function AddEditTodoScreen({ navigation, route }: Props) {
   const { personId } = route.params ?? {};
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -29,12 +26,10 @@ export default function AddEditTaskScreen({ navigation, route }: Props) {
   const [estimatedMinutes, setEstimatedMinutes] = useState('');
   const [priority, setPriority] = useState<PriorityValue>(Priority.MEDIUM);
 
-  const defaultDate = new Date(Date.now() + 3600000);
+  const defaultDate = new Date(Date.now() + 86400000);
   const [dueDate, setDueDate] = useState<Date>(defaultDate);
   const [hasDueDate, setHasDueDate] = useState(false);
-
   const [pickerVisible, setPickerVisible] = useState(false);
-  const [pickerMode, setPickerMode] = useState<PickerMode>('date');
 
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('none');
   const [weeklyDay, setWeeklyDay] = useState(0);
@@ -43,7 +38,7 @@ export default function AddEditTaskScreen({ navigation, route }: Props) {
   const [monthlyWeekday, setMonthlyWeekday] = useState(1);
 
   const [saving, setSaving] = useState(false);
-  const { addTask } = useTaskStore();
+  const { addTodo } = useTaskStore();
 
   const priorityButtons = [
     { value: String(Priority.HIGH), label: PRIORITY_LABELS[Priority.HIGH] },
@@ -51,24 +46,12 @@ export default function AddEditTaskScreen({ navigation, route }: Props) {
     { value: String(Priority.LOW), label: PRIORITY_LABELS[Priority.LOW] },
   ];
 
-  function openPicker(mode: PickerMode) {
-    setPickerMode(mode);
-    setPickerVisible(true);
-  }
-
   function handlePickerChange(_: unknown, selected?: Date) {
     if (Platform.OS === 'android') setPickerVisible(false);
     if (!selected) return;
     const updated = new Date(dueDate);
-    if (pickerMode === 'date') {
-      updated.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate());
-    } else {
-      updated.setHours(selected.getHours(), selected.getMinutes(), 0, 0);
-    }
+    updated.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate());
     setDueDate(updated);
-    if (Platform.OS === 'android' && pickerMode === 'date') {
-      setTimeout(() => openPicker('time'), 100);
-    }
   }
 
   function buildRecurrence(): string | undefined {
@@ -87,15 +70,15 @@ export default function AddEditTaskScreen({ navigation, route }: Props) {
       const computedDueDate = recurrence
         ? computeFirstDueDate(recurrence)
         : hasDueDate ? dueDate.getTime() : undefined;
-      await addTask({
+      await addTodo({
         title: title.trim(),
         description: description || undefined,
         priority,
+        isRecurring: !!recurrence,
+        recurrence,
         dueDate: computedDueDate,
         tags: tags.trim() || undefined,
         estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : undefined,
-        isRecurring: !!recurrence,
-        recurrence,
         personId,
       });
       navigation.goBack();
@@ -126,16 +109,11 @@ export default function AddEditTaskScreen({ navigation, route }: Props) {
           </View>
           {hasDueDate && (
             Platform.OS === 'ios' ? (
-              <DateTimePicker value={dueDate} mode="datetime" display="inline" onChange={handlePickerChange} minimumDate={new Date()} style={styles.iosPicker} />
+              <DateTimePicker value={dueDate} mode="date" display="inline" onChange={handlePickerChange} minimumDate={new Date()} style={styles.iosPicker} />
             ) : (
-              <View style={styles.dateRow}>
-                <TouchableOpacity style={styles.dateBtn} onPress={() => openPicker('date')}>
-                  <Text variant="bodyLarge" style={styles.dateBtnText}>{formatDate(dueDate)}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.timeBtn} onPress={() => openPicker('time')}>
-                  <Text variant="bodyLarge" style={styles.dateBtnText}>{formatTime(dueDate)}</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity style={styles.dateBtn} onPress={() => setPickerVisible(true)}>
+                <Text variant="bodyLarge" style={styles.dateBtnText}>{formatDate(dueDate)}</Text>
+              </TouchableOpacity>
             )
           )}
         </>
@@ -196,11 +174,11 @@ export default function AddEditTaskScreen({ navigation, route }: Props) {
       <TextInput label="Minutes" value={estimatedMinutes} onChangeText={v => setEstimatedMinutes(v.replace(/[^0-9]/g, ''))} keyboardType="numeric" mode="outlined" style={styles.input} />
 
       <Button mode="contained" onPress={handleSave} loading={saving} disabled={saving} style={styles.save}>
-        Add Task
+        Add Todo
       </Button>
 
       {pickerVisible && Platform.OS === 'android' && (
-        <DateTimePicker value={dueDate} mode={pickerMode} display="default" onChange={handlePickerChange} minimumDate={pickerMode === 'date' ? new Date() : undefined} />
+        <DateTimePicker value={dueDate} mode={'date' as PickerMode} display="default" onChange={handlePickerChange} minimumDate={new Date()} />
       )}
     </ScrollView>
   );
@@ -216,9 +194,7 @@ const styles = StyleSheet.create({
   recurrenceHint: { opacity: 0.6, marginBottom: 4, color: '#5C33D4' },
   save: { marginTop: 24, marginBottom: 40 },
   dueDateHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginBottom: 8 },
-  dateRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  dateBtn: { flex: 2, backgroundColor: '#EDE9FF', borderRadius: 8, padding: 12, alignItems: 'center' },
-  timeBtn: { flex: 1, backgroundColor: '#EDE9FF', borderRadius: 8, padding: 12, alignItems: 'center' },
+  dateBtn: { backgroundColor: '#EDE9FF', borderRadius: 8, padding: 12, alignItems: 'center', marginBottom: 8 },
   dateBtnText: { color: '#5C33D4', fontWeight: '600' },
   iosPicker: { marginBottom: 8 },
 });

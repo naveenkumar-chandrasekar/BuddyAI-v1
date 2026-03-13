@@ -110,7 +110,7 @@ export default function ChatScreen({ route }: ChatScreenProps) {
 
       {modelState === 'loading' && (
         <View style={styles.modelBanner}>
-          <ActivityIndicator size="small" color="#5B3EBF" />
+          <ActivityIndicator size="small" color="#5C33D4" />
           <Text variant="bodySmall" style={styles.modelBannerText}>
             Loading AI model… (~30s on first open)
           </Text>
@@ -183,11 +183,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#EDE5FF',
+    backgroundColor: '#EDE9FF',
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  modelBannerText: { color: '#5B3EBF', flex: 1 },
+  modelBannerText: { color: '#5C33D4', flex: 1 },
   modelBannerError: { backgroundColor: '#F9DEDC' },
   modelBannerErrorText: { color: '#B3261E', flex: 1 },
   messageList: { padding: 12, paddingBottom: 4 },
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   bubbleRowUser: { justifyContent: 'flex-end' },
   bubbleRowAi: { justifyContent: 'flex-start' },
   bubble: { maxWidth: '80%', borderRadius: 16, padding: 10 },
-  bubbleUser: { backgroundColor: '#5B3EBF' },
+  bubbleUser: { backgroundColor: '#5C33D4' },
   bubbleAi: { backgroundColor: '#e0e0e0' },
   bubbleError: { backgroundColor: '#ffcdd2' },
   bubbleSummary: { backgroundColor: '#e8f5e9', borderWidth: 1, borderColor: '#a5d6a7' },
