@@ -25,7 +25,7 @@ export async function sendMessage(
     });
 
     return { userMessage, aiMessage };
-  } catch (e) {
+  } catch {
     const aiMessage = await chatMessageRepository.create({
       sessionId, sender: 'ai',
       message: 'Something went wrong. Please try again.',
