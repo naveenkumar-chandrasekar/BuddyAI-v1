@@ -5,39 +5,13 @@ jest.mock('../../../../data/repositories/ChatRepository', () => ({
   chatSessionRepository: { getAll: jest.fn(), getByDate: jest.fn(), create: jest.fn() },
 }));
 
-jest.mock('../../../../core/ai/LlamaService', () => ({
-  llamaService: {
-    isInitialized: false,
-    complete: jest.fn(),
-  },
-}));
-
-jest.mock('../../../../core/ai/PromptBuilder', () => ({
-  buildPrompt: jest.fn().mockResolvedValue('prompt text'),
-}));
-
-jest.mock('../../../../core/ai/IntentParser', () => ({
-  parseIntent: jest.fn(),
-  isConversationalOnly: jest.fn(),
-}));
-
-jest.mock('../../../../core/ai/ActionExecutor', () => ({
-  executeAction: jest.fn().mockResolvedValue({ success: true }),
-}));
-
-jest.mock('../../../../core/ai/KeywordClassifier', () => ({
-  classifyByKeyword: jest.fn().mockReturnValue(null),
-}));
-
-jest.mock('../../../../core/ai/QueryResponseBuilder', () => ({
-  buildQueryTodayMessage: jest.fn().mockResolvedValue('Here is your day!'),
-  buildQueryUpcomingMessage: jest.fn().mockResolvedValue('Here is upcoming!'),
-  buildBirthdayMessage: jest.fn().mockResolvedValue('Birthdays!'),
+jest.mock('../../../../core/ai/AgentOrchestrator', () => ({
+  processMessage: jest.fn(),
+  clearPending: jest.fn(),
 }));
 
 const { chatMessageRepository } = jest.requireMock('../../../../data/repositories/ChatRepository');
-const llamaMod = jest.requireMock('../../../../core/ai/LlamaService');
-const { parseIntent, isConversationalOnly } = jest.requireMock('../../../../core/ai/IntentParser');
+const orchestratorMock = jest.requireMock('../../../../core/ai/AgentOrchestrator');
 
 const makeMsg = (overrides = {}) => ({
   id: 'm1', sessionId: 'sess1', sender: 'user' as const, message: 'hello',
@@ -49,29 +23,27 @@ const makeMsg = (overrides = {}) => ({
 describe('sendMessage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    llamaMod.llamaService.isInitialized = false;
   });
 
-  it('returns model-not-loaded message when LlamaService not initialized', async () => {
+  it('returns model-not-loaded message when model not initialized', async () => {
+    orchestratorMock.processMessage.mockResolvedValue({
+      type: 'error', message: 'AI model not loaded.',
+    });
     chatMessageRepository.create
       .mockResolvedValueOnce(makeMsg({ sender: 'user' }))
       .mockResolvedValueOnce(makeMsg({ sender: 'ai', messageType: 'error' }));
 
-    const { userMessage, aiMessage } = await sendMessage('sess1', 'Hello');
+    const { aiMessage } = await sendMessage('sess1', 'Hello');
 
-    expect(userMessage.sender).toBe('user');
     expect(aiMessage.messageType).toBe('error');
     const secondCallArg = chatMessageRepository.create.mock.calls[1][0];
     expect(secondCallArg.message).toContain('not loaded');
   });
 
   it('saves user message and AI reply for conversational intent', async () => {
-    llamaMod.llamaService.isInitialized = true;
-    llamaMod.llamaService.complete.mockResolvedValue('...');
-
-    parseIntent.mockReturnValue({ intent: 'CONVERSATION_INTENT', action: 'GENERAL_CHAT', message: 'Hi there!', data: {} });
-    isConversationalOnly.mockReturnValue(true);
-
+    orchestratorMock.processMessage.mockResolvedValue({
+      type: 'reply', message: 'Hi there!',
+    });
     chatMessageRepository.create
       .mockResolvedValueOnce(makeMsg({ sender: 'user', message: 'Hello' }))
       .mockResolvedValueOnce(makeMsg({ sender: 'ai', message: 'Hi there!', messageType: 'text' }));
@@ -86,63 +58,44 @@ describe('sendMessage', () => {
   });
 
   it('executes action for non-conversational intent and saves action message', async () => {
-    const { executeAction } = jest.requireMock('../../../../core/ai/ActionExecutor');
-    llamaMod.llamaService.isInitialized = true;
-    llamaMod.llamaService.complete.mockResolvedValue('...');
-
-    parseIntent.mockReturnValue({
-      intent: 'TASK_INTENT', action: 'CREATE_TASK', message: 'Task created!',
-      data: { title: 'Buy milk' },
+    orchestratorMock.processMessage.mockResolvedValue({
+      type: 'reply', message: 'Task created!', actionType: 'CREATE_TASK',
     });
-    isConversationalOnly.mockReturnValue(false);
-
     chatMessageRepository.create
       .mockResolvedValueOnce(makeMsg({ sender: 'user' }))
       .mockResolvedValueOnce(makeMsg({ sender: 'ai', messageType: 'action' }));
 
-    // Include "today" so hasDateInText returns true and flow executes immediately
     await sendMessage('sess1', 'Add a task to buy milk today');
 
-    expect(executeAction).toHaveBeenCalledWith(expect.objectContaining({ action: 'CREATE_TASK' }));
     const aiCallArg = chatMessageRepository.create.mock.calls[1][0];
     expect(aiCallArg.messageType).toBe('action');
     expect(aiCallArg.actionType).toBe('CREATE_TASK');
   });
 
   it('asks for due date when CREATE_TASK has no date, then executes on follow-up', async () => {
-    const { executeAction } = jest.requireMock('../../../../core/ai/ActionExecutor');
-    llamaMod.llamaService.isInitialized = true;
-    llamaMod.llamaService.complete.mockResolvedValue('...');
-
-    parseIntent.mockReturnValue({
-      intent: 'TASK_INTENT', action: 'CREATE_TASK', message: 'Task created!',
-      data: { title: 'Buy milk' },
-    });
-    isConversationalOnly.mockReturnValue(false);
+    orchestratorMock.processMessage
+      .mockResolvedValueOnce({ type: 'question', message: 'When is "Buy milk" due?' })
+      .mockResolvedValueOnce({ type: 'reply', message: 'Task created!', actionType: 'CREATE_TASK' });
 
     chatMessageRepository.create
       .mockResolvedValueOnce(makeMsg({ sender: 'user', message: 'add task buy milk' }))
       .mockResolvedValueOnce(makeMsg({ sender: 'ai', message: 'When is "Buy milk" due?', messageType: 'text' }));
 
-    // First turn — no date → should ask
     await sendMessage('sess1', 'add task buy milk');
     const askArg = chatMessageRepository.create.mock.calls[1][0];
     expect(askArg.messageType).toBe('text');
-    expect(executeAction).not.toHaveBeenCalled();
 
-    // Second turn — provide date
     chatMessageRepository.create
       .mockResolvedValueOnce(makeMsg({ sender: 'user', message: 'tomorrow' }))
       .mockResolvedValueOnce(makeMsg({ sender: 'ai', messageType: 'action', actionType: 'CREATE_TASK' }));
 
     await sendMessage('sess1', 'tomorrow');
-    expect(executeAction).toHaveBeenCalledWith(expect.objectContaining({ action: 'CREATE_TASK' }));
+    const actionArg = chatMessageRepository.create.mock.calls[3][0];
+    expect(actionArg.actionType).toBe('CREATE_TASK');
   });
 
-  it('returns error message if inference throws', async () => {
-    llamaMod.llamaService.isInitialized = true;
-    llamaMod.llamaService.complete.mockRejectedValue(new Error('inference failed'));
-
+  it('returns error message if orchestrator throws', async () => {
+    orchestratorMock.processMessage.mockRejectedValue(new Error('inference failed'));
     chatMessageRepository.create
       .mockResolvedValueOnce(makeMsg({ sender: 'user' }))
       .mockResolvedValueOnce(makeMsg({ sender: 'ai', messageType: 'error' }));

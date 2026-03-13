@@ -2,7 +2,7 @@ import { initLlama } from 'llama.rn';
 import type { LlamaContext } from 'llama.rn';
 import { getSavedModelPath } from './ModelDownloadService';
 
-const MODEL_FILENAME = 'qwen2.5-0.5b-instruct-q4_k_m.gguf';
+const MODEL_FILENAME = 'qwen2.5-1.5b-instruct-q4_k_m.gguf';
 
 class LlamaService {
   private context: LlamaContext | null = null;

@@ -37,7 +37,7 @@ export default function ModelDownloadScreen({ navigation }: Props) {
           AI Model Required
         </Text>
         <Text variant="bodyMedium" style={styles.body}>
-          BuddyAI uses Qwen2.5 0.5B running entirely on your device. No data ever leaves your
+          BuddyAI uses Qwen2.5 1.5B running entirely on your device. No data ever leaves your
           phone.
         </Text>
         <Text variant="bodySmall" style={styles.size}>

@@ -44,7 +44,7 @@ describe('RootNavigator — onboarding gate', () => {
 
   it('shows main app when onboarding done and model exists', async () => {
     storage.set('onboarding_done', true);
-    storage.set('model_path', '/mock/documents/models/qwen2.5-0.5b-instruct-q4_k_m.gguf');
+    storage.set('model_path', '/mock/documents/models/qwen2.5-1.5b-instruct-q4_k_m.gguf');
     mockRNFS.exists.mockResolvedValue(true);
     render(<RootNavigator />, { wrapper: Wrapper });
     expect(await screen.findByText("Today's Chat")).toBeTruthy();

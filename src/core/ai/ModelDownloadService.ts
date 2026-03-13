@@ -2,8 +2,8 @@ import RNFS from 'react-native-fs';
 import { storage } from '../storage/mmkv';
 
 const MODEL_URL =
-  'https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf';
-const MODEL_FILENAME = 'qwen2.5-0.5b-instruct-q4_k_m.gguf';
+  'https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf';
+const MODEL_FILENAME = 'qwen2.5-1.5b-instruct-q4_k_m.gguf';
 const MODEL_PATH_KEY = 'model_path';
 
 export function getModelDir(): string {
